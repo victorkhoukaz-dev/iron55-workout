@@ -6,6 +6,8 @@ import {
   Check,
   Dumbbell,
   Edit3,
+  Info,
+  LayoutGrid,
   Play,
   Plus,
   RotateCcw,
@@ -14,16 +16,19 @@ import {
   Trash2,
   X
 } from 'lucide-react';
+import { getExerciseImagePath } from '../data/exerciseMedia';
 import {
   BenchAngle,
   EquipmentType,
   ExerciseDefinition,
   MuscleGroup,
   PlanExerciseSlot,
+  ProgressionRecommendation,
   WorkoutLog,
   WorkoutPlan
 } from '../types/workout';
 import { getProgressionForExercise } from '../utils/progression';
+import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 interface PlansAndGuideViewProps {
   plans: WorkoutPlan[];
@@ -77,6 +82,13 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
   const [showAddSlotModal, setShowAddSlotModal] = useState<boolean>(false);
   const [showNewExerciseModal, setShowNewExerciseModal] = useState<boolean>(false);
   const [showMethodology, setShowMethodology] = useState<boolean>(false);
+  const [subView, setSubView] = useState<'plans' | 'library'>('plans');
+  const [muscleFilter, setMuscleFilter] = useState<'All' | MuscleGroup>('All');
+  const [inspectTarget, setInspectTarget] = useState<{
+    exercise: ExerciseDefinition;
+    slot?: PlanExerciseSlot;
+    progression?: ProgressionRecommendation;
+  } | null>(null);
 
   // New Custom Exercise Form
   const [newExName, setNewExName] = useState('');
@@ -257,286 +269,440 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
         )}
       </div>
 
-      {/* Workout A / B / C Tab Selector */}
-      <div className="grid grid-cols-3 gap-2">
-        {plans.map((p) => {
-          const isSelected = activePlan?.id === p.id;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => {
-                setEditingPlan(null);
-                setSelectedPlanId(p.id);
-              }}
-              className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-                isSelected
-                  ? 'bg-emerald-500/15 border-emerald-500 text-zinc-100 shadow-lg shadow-emerald-500/10'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className={`px-2 py-0.5 rounded-md text-xs font-extrabold ${
-                    isSelected
-                      ? 'bg-emerald-500 text-zinc-950'
-                      : 'bg-zinc-800 text-zinc-300'
-                  }`}
-                >
-                  PLAN {p.code}
-                </span>
-                <span className="text-[11px] font-mono text-zinc-400">
-                  {p.estimatedMinutes}m
-                </span>
-              </div>
-              <div className="text-xs font-bold mt-2 line-clamp-1">
-                {p.name.replace(/^Workout [A-C] — /, '')}
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-0.5">
-                {p.exercises.length} exercises •{' '}
-                {p.exercises.reduce((s, e) => s + e.targetSets, 0)} sets
-              </div>
-            </button>
-          );
-        })}
+      {/* 2-Segment Toggle: A/B/C Plans vs Full Exercise Library */}
+      <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <button
+          type="button"
+          onClick={() => setSubView('plans')}
+          className={`py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+            subView === 'plans'
+              ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/15'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <Dumbbell className="w-3.5 h-3.5" />
+          A / B / C Plans
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingPlan(null);
+            setSubView('library');
+          }}
+          className={`py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+            subView === 'library'
+              ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/15'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          All Exercises ({exercises.length})
+        </button>
       </div>
 
-      {/* Selected Plan Card */}
-      {activePlan && (
-        <div className="rounded-3xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-xl">
-          <div className="p-4 border-b border-zinc-800">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-base font-extrabold text-zinc-100">{activePlan.name}</h2>
-                <p className="text-xs text-emerald-400 font-medium mt-0.5">
-                  {activePlan.subtitle}
+      {subView === 'plans' ? (
+        <>
+          {/* Workout A / B / C Tab Selector */}
+          <div className="grid grid-cols-3 gap-2">
+            {plans.map((p) => {
+              const isSelected = activePlan?.id === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setEditingPlan(null);
+                    setSelectedPlanId(p.id);
+                  }}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-500/15 border-emerald-500 text-zinc-100 shadow-lg shadow-emerald-500/10'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-xs font-extrabold ${
+                        isSelected
+                          ? 'bg-emerald-500 text-zinc-950'
+                          : 'bg-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      PLAN {p.code}
+                    </span>
+                    <span className="text-[11px] font-mono text-zinc-400">
+                      {p.estimatedMinutes}m
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold mt-2 line-clamp-1">
+                    {p.name.replace(/^Workout [A-C] — /, '')}
+                  </div>
+                  <div className="text-[10px] text-zinc-500 mt-0.5">
+                    {p.exercises.length} exercises •{' '}
+                    {p.exercises.reduce((s, e) => s + e.targetSets, 0)} sets
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected Plan Card */}
+          {activePlan && (
+            <div className="rounded-3xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-xl">
+              <div className="p-4 border-b border-zinc-800">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h2 className="text-base font-extrabold text-zinc-100">{activePlan.name}</h2>
+                    <p className="text-xs text-emerald-400 font-medium mt-0.5">
+                      {activePlan.subtitle}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {editingPlan ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setEditingPlan(null)}
+                          className="px-3 py-1.5 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveEdit}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-zinc-950 text-xs font-extrabold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          Save Plan
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(activePlan)}
+                          className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          Customize
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onStartPlan(activePlan)}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-extrabold flex items-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          Start
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs text-zinc-400 mt-2.5 leading-relaxed">
+                  {activePlan.description}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5">
-                {editingPlan ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setEditingPlan(null)}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold cursor-pointer"
+
+              {/* Exercise Slots List */}
+              <div className="p-3.5 space-y-2.5">
+                {activePlan.exercises.map((slot, idx) => {
+                  const def = getExDef(slot.exerciseId);
+                  const prog = getProgressionForExercise(slot, def, logs);
+                  const imgPath = getExerciseImagePath(def);
+
+                  return (
+                    <div
+                      key={slot.slotId || idx}
+                      onClick={() => {
+                        if (!editingPlan && def) {
+                          setInspectTarget({ exercise: def, slot, progression: prog });
+                        }
+                      }}
+                      className={`p-3.5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 space-y-2.5 ${
+                        !editingPlan
+                          ? 'hover:border-emerald-500/40 transition cursor-pointer'
+                          : ''
+                      }`}
                     >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveEdit}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-500 text-zinc-950 text-xs font-extrabold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Save className="w-3.5 h-3.5" />
-                      Save Plan
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(activePlan)}
-                      className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      Customize
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onStartPlan(activePlan)}
-                      className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-extrabold flex items-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      Start
-                    </button>
-                  </>
+                      <div className="flex items-start justify-between gap-2.5">
+                        {!editingPlan && (
+                          <div className="w-16 h-10 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800 shrink-0 flex items-center justify-center mt-0.5">
+                            {imgPath ? (
+                              <img
+                                src={imgPath}
+                                alt={def?.name || slot.exerciseId}
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Dumbbell className="w-4 h-4 text-emerald-400/70" />
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {slot.supersetTag && (
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                {slot.supersetTag}
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-800 text-zinc-300">
+                              {def?.primaryMuscle || 'Upper Body'}
+                            </span>
+                            {def?.benchAngle && (
+                              <span className="px-2 py-0.5 rounded-md text-[11px] bg-zinc-900 text-amber-300 border border-amber-500/20">
+                                {def.benchAngle}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-sm font-bold text-zinc-100 mt-1">
+                            {def?.name || slot.exerciseId}
+                          </h3>
+                        </div>
+
+                        {editingPlan ? (
+                          <div
+                            className="flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleMoveSlot(idx, -1)}
+                              disabled={idx === 0}
+                              className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 disabled:opacity-30"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveSlot(idx, 1)}
+                              disabled={idx === activePlan.exercises.length - 1}
+                              className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 disabled:opacity-30"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSlot(idx)}
+                              className="p-1.5 rounded-lg bg-red-950/60 text-red-400 hover:bg-red-900/50"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-right shrink-0">
+                            <div className="text-xs font-mono font-extrabold text-zinc-200">
+                              {slot.targetSets} sets × {slot.repRangeMin}–{slot.repRangeMax}
+                            </div>
+                            <div className="text-[11px] text-zinc-500">Rest {slot.restSeconds}s</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Next Session Smart Target & Visuals Pill */}
+                      {!editingPlan && (
+                        <div className="flex items-center justify-between gap-2 text-xs pt-2 border-t border-zinc-900">
+                          <span className="text-emerald-400 font-semibold flex items-center gap-1 truncate">
+                            <Sparkles className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{prog.badgeText}</span>
+                          </span>
+                          {def && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInspectTarget({ exercise: def, slot, progression: prog });
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/70 text-[11px] font-bold text-zinc-200 flex items-center gap-1 shrink-0 cursor-pointer"
+                            >
+                              <Info className="w-3 h-3 text-emerald-400" />
+                              Form &amp; Visuals
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Edit Controls when in Customize Mode */}
+                      {editingPlan && (
+                        <div className="grid grid-cols-4 gap-2 pt-2 border-t border-zinc-800 text-xs">
+                          <div>
+                            <label className="block text-[10px] text-zinc-500 uppercase">Pair</label>
+                            <input
+                              type="text"
+                              value={slot.supersetTag || ''}
+                              onChange={(e) =>
+                                handleUpdateSlot(idx, { supersetTag: e.target.value.toUpperCase() })
+                              }
+                              className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-bold text-zinc-100"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-zinc-500 uppercase">Sets</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={8}
+                              value={slot.targetSets}
+                              onChange={(e) =>
+                                handleUpdateSlot(idx, {
+                                  targetSets: Math.max(1, parseInt(e.target.value, 10) || 3)
+                                })
+                              }
+                              className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-zinc-500 uppercase">
+                              Min–Max Reps
+                            </label>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <input
+                                type="number"
+                                min={1}
+                                max={30}
+                                value={slot.repRangeMin}
+                                onChange={(e) =>
+                                  handleUpdateSlot(idx, {
+                                    repRangeMin: Math.max(1, parseInt(e.target.value, 10) || 8)
+                                  })
+                                }
+                                className="w-1/2 px-1 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
+                              />
+                              <input
+                                type="number"
+                                min={1}
+                                max={30}
+                                value={slot.repRangeMax}
+                                onChange={(e) =>
+                                  handleUpdateSlot(idx, {
+                                    repRangeMax: Math.max(1, parseInt(e.target.value, 10) || 12)
+                                  })
+                                }
+                                className="w-1/2 px-1 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-zinc-500 uppercase">
+                              Rest (s)
+                            </label>
+                            <input
+                              type="number"
+                              step={15}
+                              min={15}
+                              max={240}
+                              value={slot.restSeconds}
+                              onChange={(e) =>
+                                handleUpdateSlot(idx, {
+                                  restSeconds: Math.max(15, parseInt(e.target.value, 10) || 60)
+                                })
+                              }
+                              className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {editingPlan && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddSlotModal(true)}
+                    className="w-full py-3 rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Exercise to {editingPlan.name}
+                  </button>
                 )}
               </div>
             </div>
-
-            <p className="text-xs text-zinc-400 mt-2.5 leading-relaxed">
-              {activePlan.description}
-            </p>
+          )}
+        </>
+      ) : (
+        /* Full Exercise Library Browser View */
+        <div className="space-y-3">
+          {/* Muscle Group Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {(['All', 'Biceps', 'Triceps', 'Shoulders', 'Back', 'Chest', 'Traps'] as const).map(
+              (group) => {
+                const active = muscleFilter === group;
+                return (
+                  <button
+                    key={group}
+                    type="button"
+                    onClick={() => setMuscleFilter(group)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition cursor-pointer ${
+                      active
+                        ? 'bg-emerald-500 text-zinc-950 border-emerald-400'
+                        : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    {group}
+                  </button>
+                );
+              }
+            )}
           </div>
 
-          {/* Exercise Slots List */}
-          <div className="p-3.5 space-y-2.5">
-            {activePlan.exercises.map((slot, idx) => {
-              const def = getExDef(slot.exerciseId);
-              const prog = getProgressionForExercise(slot, def, logs);
+          <div className="space-y-2.5">
+            {exercises
+              .filter((ex) => muscleFilter === 'All' || ex.primaryMuscle === muscleFilter)
+              .map((ex) => {
+                const imgPath = getExerciseImagePath(ex);
+                const defaultSlot: PlanExerciseSlot = {
+                  slotId: `lib-${ex.id}`,
+                  exerciseId: ex.id,
+                  targetSets: 3,
+                  repRangeMin: ex.repRangeMin,
+                  repRangeMax: ex.repRangeMax,
+                  restSeconds: ex.defaultRestSeconds
+                };
+                const prog = getProgressionForExercise(defaultSlot, ex, logs);
 
-              return (
-                <div
-                  key={slot.slotId || idx}
-                  className="p-3.5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {slot.supersetTag && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                            {slot.supersetTag}
-                          </span>
-                        )}
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-800 text-zinc-300">
-                          {def?.primaryMuscle || 'Upper Body'}
-                        </span>
-                        {def?.benchAngle && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] bg-zinc-900 text-amber-300 border border-amber-500/20">
-                            {def.benchAngle}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-sm font-bold text-zinc-100 mt-1">
-                        {def?.name || slot.exerciseId}
-                      </h3>
-                    </div>
-
-                    {editingPlan ? (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleMoveSlot(idx, -1)}
-                          disabled={idx === 0}
-                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 disabled:opacity-30"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveSlot(idx, 1)}
-                          disabled={idx === activePlan.exercises.length - 1}
-                          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 disabled:opacity-30"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSlot(idx)}
-                          className="p-1.5 rounded-lg bg-red-950/60 text-red-400 hover:bg-red-900/50"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-right">
-                        <div className="text-xs font-mono font-extrabold text-zinc-200">
-                          {slot.targetSets} sets × {slot.repRangeMin}–{slot.repRangeMax}
-                        </div>
-                        <div className="text-[11px] text-zinc-500">Rest {slot.restSeconds}s</div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Next Session Smart Target */}
-                  {!editingPlan && (
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-900">
-                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        {prog.badgeText}
-                      </span>
-                      {slot.coachingNote && (
-                        <span className="text-[11px] text-zinc-500 truncate max-w-[200px]">
-                          {slot.coachingNote}
-                        </span>
+                return (
+                  <button
+                    key={ex.id}
+                    type="button"
+                    onClick={() => setInspectTarget({ exercise: ex, progression: prog })}
+                    className="w-full text-left p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-emerald-500/40 transition flex items-start gap-3 cursor-pointer"
+                  >
+                    <div className="w-24 h-14 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shrink-0 flex items-center justify-center">
+                      {imgPath ? (
+                        <img
+                          src={imgPath}
+                          alt={ex.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Dumbbell className="w-5 h-5 text-emerald-400/70" />
                       )}
                     </div>
-                  )}
 
-                  {/* Edit Controls when in Customize Mode */}
-                  {editingPlan && (
-                    <div className="grid grid-cols-4 gap-2 pt-2 border-t border-zinc-800 text-xs">
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 uppercase">Pair</label>
-                        <input
-                          type="text"
-                          value={slot.supersetTag || ''}
-                          onChange={(e) =>
-                            handleUpdateSlot(idx, { supersetTag: e.target.value.toUpperCase() })
-                          }
-                          className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-bold text-zinc-100"
-                        />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                          {ex.primaryMuscle}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-800 text-amber-300">
+                          {ex.benchAngle}
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {ex.repRangeMin}–{ex.repRangeMax} reps
+                        </span>
                       </div>
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 uppercase">Sets</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={8}
-                          value={slot.targetSets}
-                          onChange={(e) =>
-                            handleUpdateSlot(idx, {
-                              targetSets: Math.max(1, parseInt(e.target.value, 10) || 3)
-                            })
-                          }
-                          className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 uppercase">
-                          Min–Max Reps
-                        </label>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <input
-                            type="number"
-                            min={1}
-                            max={30}
-                            value={slot.repRangeMin}
-                            onChange={(e) =>
-                              handleUpdateSlot(idx, {
-                                repRangeMin: Math.max(1, parseInt(e.target.value, 10) || 8)
-                              })
-                            }
-                            className="w-1/2 px-1 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
-                          />
-                          <input
-                            type="number"
-                            min={1}
-                            max={30}
-                            value={slot.repRangeMax}
-                            onChange={(e) =>
-                              handleUpdateSlot(idx, {
-                                repRangeMax: Math.max(1, parseInt(e.target.value, 10) || 12)
-                              })
-                            }
-                            className="w-1/2 px-1 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 uppercase">
-                          Rest (s)
-                        </label>
-                        <input
-                          type="number"
-                          step={15}
-                          min={15}
-                          max={240}
-                          value={slot.restSeconds}
-                          onChange={(e) =>
-                            handleUpdateSlot(idx, {
-                              restSeconds: Math.max(15, parseInt(e.target.value, 10) || 60)
-                            })
-                          }
-                          className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono font-bold text-zinc-100"
-                        />
-                      </div>
+                      <h3 className="text-sm font-bold text-zinc-100 mt-1 truncate">{ex.name}</h3>
+                      <p className="text-[11px] text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">
+                        {ex.whyItWorks}
+                      </p>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {editingPlan && (
-              <button
-                type="button"
-                onClick={() => setShowAddSlotModal(true)}
-                className="w-full py-3 rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                Add Exercise to {editingPlan.name}
-              </button>
-            )}
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}
@@ -751,6 +917,15 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
             </button>
           </form>
         </div>
+      )}
+      {/* Exercise Detail & Visual Overview Modal */}
+      {inspectTarget && (
+        <ExerciseDetailModal
+          exercise={inspectTarget.exercise}
+          slot={inspectTarget.slot}
+          progression={inspectTarget.progression}
+          onClose={() => setInspectTarget(null)}
+        />
       )}
     </div>
   );

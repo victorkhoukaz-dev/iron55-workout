@@ -7,6 +7,7 @@ import {
   Dumbbell,
   Flame,
   Info,
+  Maximize2,
   Minus,
   Plus,
   RefreshCw,
@@ -17,6 +18,7 @@ import {
   Volume2,
   X
 } from 'lucide-react';
+import { getExerciseImagePath } from '../data/exerciseMedia';
 import {
   ActiveWorkoutDraft,
   ExerciseDefinition,
@@ -31,6 +33,7 @@ import {
   snapToDumbbellIncrement
 } from '../utils/progression';
 import { playRestCompleteAlert, playSetCheckBeep } from '../utils/audio';
+import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 interface ActiveWorkoutLoggerProps {
   draft: ActiveWorkoutDraft;
@@ -71,6 +74,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     setIdx: number;
   } | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState<boolean>(false);
+  const [modalExerciseIdx, setModalExerciseIdx] = useState<number | null>(null);
 
   // Elapsed workout timer
   useEffect(() => {
@@ -483,34 +487,63 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
                   <p className="text-[11px] text-zinc-400 leading-relaxed">{prog.reason}</p>
                 </div>
 
-                {/* Expandable Setup & Execution Cues */}
-                {isCuesOpen && exDef && (
-                  <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-emerald-500/25 text-xs space-y-2">
-                    <div>
-                      <div className="font-bold text-emerald-400 uppercase tracking-wider text-[10px]">
-                        Bench & Body Setup ({exDef.equipment})
+                {/* Expandable Setup & Execution Cues + Visual Overview */}
+                {isCuesOpen && exDef && (() => {
+                  const cuesImgPath = getExerciseImagePath(exDef);
+                  return (
+                    <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-emerald-500/25 text-xs space-y-2.5">
+                      {cuesImgPath && (
+                        <div className="rounded-xl overflow-hidden border border-zinc-800 bg-[#0d0f12] relative">
+                          <img
+                            src={cuesImgPath}
+                            alt={`${exDef.name} visual guide`}
+                            onClick={() => setModalExerciseIdx(exIdx)}
+                            className="w-full aspect-video object-cover cursor-zoom-in block"
+                          />
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent">
+                            <span className="px-1.5 py-0.5 rounded bg-zinc-950/85 border border-zinc-700/80 text-[9px] font-extrabold text-zinc-200">
+                              1. START
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-950/90 border border-emerald-500/40 text-[9px] font-extrabold text-emerald-300">
+                              2. PEAK
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setModalExerciseIdx(exIdx)}
+                            className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-zinc-950/85 hover:bg-zinc-900 border border-zinc-700/70 text-[10px] font-bold text-zinc-200 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Maximize2 className="w-3 h-3 text-emerald-400" />
+                            Full View
+                          </button>
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-emerald-400 uppercase tracking-wider text-[10px]">
+                          Bench &amp; Body Setup ({exDef.equipment})
+                        </div>
+                        <ul className="mt-1 space-y-1 text-zinc-300 list-disc list-inside">
+                          {exDef.setupCues.map((cue, i) => (
+                            <li key={i}>{cue}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="mt-1 space-y-1 text-zinc-300 list-disc list-inside">
-                        {exDef.setupCues.map((cue, i) => (
-                          <li key={i}>{cue}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="font-bold text-sky-400 uppercase tracking-wider text-[10px]">
-                        Execution & Tempo Cues
+                      <div>
+                        <div className="font-bold text-sky-400 uppercase tracking-wider text-[10px]">
+                          Execution &amp; Tempo Cues
+                        </div>
+                        <ul className="mt-1 space-y-1 text-zinc-300 list-disc list-inside">
+                          {exDef.executionCues.map((cue, i) => (
+                            <li key={i}>{cue}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="mt-1 space-y-1 text-zinc-300 list-disc list-inside">
-                        {exDef.executionCues.map((cue, i) => (
-                          <li key={i}>{cue}</li>
-                        ))}
-                      </ul>
+                      <div className="pt-1 border-t border-zinc-800 text-[11px] text-zinc-400 italic">
+                        Why it works: {exDef.whyItWorks}
+                      </div>
                     </div>
-                    <div className="pt-1 border-t border-zinc-800 text-[11px] text-zinc-400 italic">
-                      Why it works: {exDef.whyItWorks}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Sets Logger Table */}
@@ -875,6 +908,30 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
           )}
         </div>
       </div>
+      {/* Exercise Detail Modal from Active Workout Cues */}
+      {modalExerciseIdx !== null && (() => {
+        const activeEx = draft.exercises[modalExerciseIdx];
+        const def = activeEx ? getExerciseDef(activeEx.exerciseId) : undefined;
+        if (!activeEx || !def) return null;
+        const slot = plan?.exercises.find((s) => s.exerciseId === activeEx.exerciseId) || {
+          slotId: `active-${modalExerciseIdx}`,
+          exerciseId: activeEx.exerciseId,
+          supersetTag: activeEx.supersetTag,
+          targetSets: activeEx.sets.length,
+          repRangeMin: activeEx.repRangeMin,
+          repRangeMax: activeEx.repRangeMax,
+          restSeconds: def.defaultRestSeconds
+        };
+        const prog = getProgressionForExercise(slot, def, logs);
+        return (
+          <ExerciseDetailModal
+            exercise={def}
+            slot={slot}
+            progression={prog}
+            onClose={() => setModalExerciseIdx(null)}
+          />
+        );
+      })()}
     </div>
   );
 };

@@ -2,21 +2,26 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
   CheckCircle2,
+  ChevronRight,
   ClipboardList,
   Cloud,
   CloudOff,
   Clock,
   Dumbbell,
   Flame,
+  Info,
   Play,
   Sparkles,
   Trophy
 } from 'lucide-react';
 import { DEFAULT_WORKOUT_PLANS } from './data/defaultPlans';
+import { getExerciseImagePath } from './data/exerciseMedia';
 import {
   ActiveWorkoutDraft,
   ExerciseDefinition,
   LoggedExercise,
+  PlanExerciseSlot,
+  ProgressionRecommendation,
   SupabaseConfig,
   WorkoutLog,
   WorkoutPlan
@@ -47,8 +52,15 @@ import { ActiveWorkoutLogger } from './components/ActiveWorkoutLogger';
 import { PlansAndGuideView } from './components/PlansAndGuideView';
 import { AnalyticsAndHistoryView } from './components/AnalyticsAndHistoryView';
 import { SupabaseSyncView } from './components/SupabaseSyncView';
+import { ExerciseDetailModal } from './components/ExerciseDetailModal';
 
 type NavTab = 'train' | 'plans' | 'analytics' | 'sync';
+
+interface InspectTarget {
+  exercise: ExerciseDefinition;
+  slot?: PlanExerciseSlot;
+  progression?: ProgressionRecommendation;
+}
 
 export const App: React.FC = () => {
   const [plans, setPlans] = useState<WorkoutPlan[]>(() => loadPlans());
@@ -64,6 +76,7 @@ export const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavTab>('train');
   const [justCompletedLog, setJustCompletedLog] = useState<WorkoutLog | null>(null);
+  const [inspectTarget, setInspectTarget] = useState<InspectTarget | null>(null);
 
   // Recommended next plan in the A -> B -> C rotation
   const recommendedNextPlan = useMemo(
@@ -455,20 +468,43 @@ export const App: React.FC = () => {
               <div className="p-3.5 space-y-2 bg-zinc-950/40">
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                    Today&apos;s Antagonist Pairs &amp; Smart Targets
+                    Today&apos;s Lineup &amp; Smart Targets
                   </span>
-                  <span className="text-[11px] text-zinc-500">5–55 lb Dumbbells + Bench</span>
+                  <span className="text-[11px] text-emerald-400/90 font-medium flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Tap any exercise for visuals &amp; cues
+                  </span>
                 </div>
 
                 {previewPlan.exercises.map((slot, idx) => {
                   const def = exercises.find((e) => e.id === slot.exerciseId);
                   const prog = getProgressionForExercise(slot, def, logs);
+                  const imgPath = getExerciseImagePath(def);
 
                   return (
-                    <div
+                    <button
                       key={slot.slotId || idx}
-                      className="p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800/90 flex items-center justify-between gap-2.5"
+                      type="button"
+                      onClick={() => {
+                        if (def) {
+                          setInspectTarget({ exercise: def, slot, progression: prog });
+                        }
+                      }}
+                      className="w-full text-left p-2.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800/80 border border-zinc-800/90 hover:border-emerald-500/40 active:scale-[0.99] transition flex items-center justify-between gap-2.5 cursor-pointer group"
                     >
+                      <div className="w-16 h-10 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800 shrink-0 flex items-center justify-center">
+                        {imgPath ? (
+                          <img
+                            src={imgPath}
+                            alt={def?.name || slot.exerciseId}
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Dumbbell className="w-4 h-4 text-emerald-400/70" />
+                        )}
+                      </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {slot.supersetTag && (
@@ -480,34 +516,37 @@ export const App: React.FC = () => {
                             {def?.name || slot.exerciseId}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 mt-0.5 truncate">
                           <span>{def?.primaryMuscle}</span>
                           <span>•</span>
-                          <span className="text-amber-300/90">{def?.benchAngle}</span>
+                          <span className="text-amber-300/90 truncate">{def?.benchAngle}</span>
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <div
-                          className={`text-xs font-mono font-extrabold flex items-center justify-end gap-1 ${
-                            prog.action === 'INCREASE_WEIGHT'
-                              ? 'text-emerald-400'
-                              : prog.action === 'MASTERY_AT_55'
-                              ? 'text-amber-400'
-                              : 'text-sky-400'
-                          }`}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {prog.recommendedWeightLbs > 0
-                            ? `${prog.recommendedWeightLbs} lbs`
-                            : 'BW'}{' '}
-                          × {prog.recommendedReps}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="text-right">
+                          <div
+                            className={`text-xs font-mono font-extrabold flex items-center justify-end gap-1 ${
+                              prog.action === 'INCREASE_WEIGHT'
+                                ? 'text-emerald-400'
+                                : prog.action === 'MASTERY_AT_55'
+                                ? 'text-amber-400'
+                                : 'text-sky-400'
+                            }`}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            {prog.recommendedWeightLbs > 0
+                              ? `${prog.recommendedWeightLbs} lbs`
+                              : 'BW'}{' '}
+                            × {prog.recommendedReps}
+                          </div>
+                          <div className="text-[10px] text-zinc-500">
+                            {slot.targetSets} sets ({slot.repRangeMin}–{slot.repRangeMax})
+                          </div>
                         </div>
-                        <div className="text-[10px] text-zinc-500">
-                          {slot.targetSets} sets ({slot.repRangeMin}–{slot.repRangeMax} reps)
-                        </div>
+                        <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition" />
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -546,6 +585,16 @@ export const App: React.FC = () => {
           onSaveConfigAndSync={handleSaveSupabaseConfig}
           onTriggerSync={() => handleRunSync(plans, logs)}
           onImportBackup={handleImportBackup}
+        />
+      )}
+
+      {/* Exercise Detail & Visual Overview Modal */}
+      {inspectTarget && (
+        <ExerciseDetailModal
+          exercise={inspectTarget.exercise}
+          slot={inspectTarget.slot}
+          progression={inspectTarget.progression}
+          onClose={() => setInspectTarget(null)}
         />
       )}
 

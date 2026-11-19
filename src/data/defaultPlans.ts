@@ -22,7 +22,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Pull the dumbbell in an arc toward your hip pocket (not straight up to your chest) to maximize lat recruitment.',
       'Pause 1 second at the top, then let your shoulder blade stretch slightly at the bottom.'
     ],
-    whyItWorks: 'Allows heavy unilateral loading (up to 55 lbs) with zero lower-back strain and full lat stretch.'
+    whyItWorks: 'Allows heavy unilateral loading (up to 55 lbs) with zero lower-back strain and full lat stretch.',
+    imagePath: './exercises/ex-single-arm-db-row.webp'
   },
   {
     id: 'ex-chest-supported-incline-row',
@@ -44,7 +45,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Drive elbows back and squeeze your shoulder blades together hard for 1 full second at the top.',
       'Control the lowering phase over 2 seconds without bouncing off the bottom.'
     ],
-    whyItWorks: 'Eliminates momentum completely so 35–50 lb dumbbells build dense mid-back, rhomboids, and lats.'
+    whyItWorks: 'Eliminates momentum completely so 35–50 lb dumbbells build dense mid-back, rhomboids, and lats.',
+    imagePath: './exercises/ex-chest-supported-incline-row.webp'
   },
   {
     id: 'ex-db-pullover',
@@ -66,7 +68,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower the dumbbell in a wide arc behind your head until you feel a deep stretch in your lats (2–3 seconds down).',
       'Pull the weight back to forehead/eye level by driving with your lats and triceps long head.'
     ],
-    whyItWorks: 'One of the only free-weight exercises that loads the lats and triceps long head in a fully stretched overhead position.'
+    whyItWorks: 'One of the only free-weight exercises that loads the lats and triceps long head in a fully stretched overhead position.',
+    imagePath: './exercises/ex-db-pullover.webp'
   },
   {
     id: 'ex-rear-delt-row',
@@ -88,7 +91,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Row the dumbbells toward your upper chest/collarbone line.',
       'Hold the top contraction for 1 second to blow up upper traps, rear delts, and teres major.'
     ],
-    whyItWorks: 'Targets the upper back shelf and rear delts for wider, thicker upper-body posture.'
+    whyItWorks: 'Targets the upper back shelf and rear delts for wider, thicker upper-body posture.',
+    imagePath: './exercises/ex-rear-delt-row.webp'
   },
 
   // ================= SHOULDERS =================
@@ -112,7 +116,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Press explosively overhead until biceps are near ears, stopping just short of clanking the dumbbells together.',
       'Lower under control until the dumbbells touch ear/chin level.'
     ],
-    whyItWorks: 'Primary compound builder for pressing strength and anterior/lateral deltoid mass.'
+    whyItWorks: 'Primary compound builder for pressing strength and anterior/lateral deltoid mass.',
+    imagePath: './exercises/ex-seated-db-shoulder-press.svg'
   },
   {
     id: 'ex-db-push-press',
@@ -134,7 +139,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Dip knees 3–4 inches, then drive explosively through the floor to launch the dumbbells overhead (Power concentric).',
       'Lower the weights back to your shoulders using a strict, slow 3-second negative.'
     ],
-    whyItWorks: 'Develops upper-body explosive power and lets you overload the shoulders and triceps with 5–10 lbs more on the eccentric.'
+    whyItWorks: 'Develops upper-body explosive power and lets you overload the shoulders and triceps with 5–10 lbs more on the eccentric.',
+    imagePath: './exercises/ex-db-push-press.svg'
   },
   {
     id: 'ex-db-lateral-raise',
@@ -156,7 +162,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Push your hands "out toward the walls" (not up with your traps) in a 20°–30° forward plane until arms are parallel to the floor.',
       'Lower over a controlled 2-second count without resting completely at your sides.'
     ],
-    whyItWorks: 'Directly isolates the lateral deltoid head responsible for shoulder width and the V-taper silhouette.'
+    whyItWorks: 'Directly isolates the lateral deltoid head responsible for shoulder width and the V-taper silhouette.',
+    imagePath: './exercises/ex-db-lateral-raise.svg'
   },
   {
     id: 'ex-chest-supported-rear-delt-fly',
@@ -178,7 +185,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Sweep the dumbbells out wide in a big arc without pinching your shoulder blades together first (isolate the rear delts).',
       'Pause briefly at the top, then control the negative.'
     ],
-    whyItWorks: 'Completes the 3D shoulder cap and balances heavy pressing to keep shoulder joints healthy.'
+    whyItWorks: 'Completes the 3D shoulder cap and balances heavy pressing to keep shoulder joints healthy.',
+    imagePath: './exercises/ex-chest-supported-rear-delt-fly.svg'
   },
   {
     id: 'ex-arnold-press',
@@ -199,7 +207,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'As you press up, smoothly rotate your palms outward so they face forward at lockout.',
       'Reverse the rotation slowly on the way down for maximum time under tension across all three delt heads.'
     ],
-    whyItWorks: 'Increases range of motion and time under tension so moderate dumbbell weights stimulate maximum delt hypertrophy.'
+    whyItWorks: 'Increases range of motion and time under tension so moderate dumbbell weights stimulate maximum delt hypertrophy.',
+    imagePath: './exercises/ex-arnold-press.svg'
   },
 
   // ================= BICEPS & FOREARMS =================
@@ -223,7 +232,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Curl the weights up while keeping your elbows locked behind your body—do not let elbows drift forward.',
       'Lower all the way down into a full 1-second biceps stretch at the bottom of every rep.'
     ],
-    whyItWorks: 'Places maximal stretch tension on the long head of the biceps, proven to drive superior biceps peak and growth.'
+    whyItWorks: 'Places maximal stretch tension on the long head of the biceps, proven to drive superior biceps peak and growth.',
+    imagePath: './exercises/ex-incline-db-curl.svg'
   },
   {
     id: 'ex-hammer-curl',
@@ -245,7 +255,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Curl upward powerfully, squeezing the thumb-side of your forearm and biceps at the top.',
       'Control the descent for 2 seconds before initiating the opposite arm.'
     ],
-    whyItWorks: 'Targets the brachialis (underneath the biceps, pushing it up for thicker arms) and the brachioradialis for thick forearms.'
+    whyItWorks: 'Targets the brachialis (underneath the biceps, pushing it up for thicker arms) and the brachioradialis for thick forearms.',
+    imagePath: './exercises/ex-hammer-curl.svg'
   },
   {
     id: 'ex-spider-preacher-curl',
@@ -267,7 +278,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Curl smoothly to full contraction, holding the top squeeze for 1 full second.',
       'Lower slowly (2–3s) without using torso momentum.'
     ],
-    whyItWorks: 'Zero-cheat isolation of the biceps short head for front-view arm width and peak contraction.'
+    whyItWorks: 'Zero-cheat isolation of the biceps short head for front-view arm width and peak contraction.',
+    imagePath: './exercises/ex-spider-preacher-curl.svg'
   },
   {
     id: 'ex-zottman-curl',
@@ -288,7 +300,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Curl the weights up with palms up just like a strict biceps curl.',
       'At the top, rotate your wrists 180° so palms face down (pronated) and lower slowly over 3 seconds.'
     ],
-    whyItWorks: 'Combines a heavy supinated concentric for the biceps with an overloaded pronated eccentric for massive forearms and elbow health.'
+    whyItWorks: 'Combines a heavy supinated concentric for the biceps with an overloaded pronated eccentric for massive forearms and elbow health.',
+    imagePath: './exercises/ex-zottman-curl.svg'
   },
   {
     id: 'ex-concentration-curl',
@@ -309,7 +322,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Curl toward your face while actively twisting your pinky finger higher than your thumb.',
       'Squeeze hard at the top, then extend fully until the arm is nearly straight.'
     ],
-    whyItWorks: 'Highest EMG biceps activation of any curl variation—awesome finisher when chasing a pump.'
+    whyItWorks: 'Highest EMG biceps activation of any curl variation—awesome finisher when chasing a pump.',
+    imagePath: './exercises/ex-concentration-curl.svg'
   },
 
   // ================= TRICEPS =================
@@ -333,7 +347,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Bend only at the elbows to lower the bells beside your ears/temples.',
       'Extend powerfully back to the starting angle without moving your upper arms.'
     ],
-    whyItWorks: 'Hits all three heads of the triceps with neutral-grip wrist comfort.'
+    whyItWorks: 'Hits all three heads of the triceps with neutral-grip wrist comfort.',
+    imagePath: './exercises/ex-db-skullcrusher.svg'
   },
   {
     id: 'ex-overhead-db-triceps-ext',
@@ -355,7 +370,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower the dumbbell deep behind your neck to stretch the triceps long head (which makes up 2/3 of triceps mass).',
       'Press straight up to full lockout.'
     ],
-    whyItWorks: 'Overhead arm elevation maximally stretches the triceps long head for upper-arm sleeve-filling size.'
+    whyItWorks: 'Overhead arm elevation maximally stretches the triceps long head for upper-arm sleeve-filling size.',
+    imagePath: './exercises/ex-overhead-db-triceps-ext.svg'
   },
   {
     id: 'ex-close-grip-neutral-db-press',
@@ -377,7 +393,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower the dumbbells to your lower chest/ribs while grazing your sides with your elbows.',
       'Drive up explosively and lock out the triceps at the top.'
     ],
-    whyItWorks: 'Allows heavy compound loading (40–55 lbs per hand) on the triceps lateral and medial heads.'
+    whyItWorks: 'Allows heavy compound loading (40–55 lbs per hand) on the triceps lateral and medial heads.',
+    imagePath: './exercises/ex-close-grip-neutral-db-press.svg'
   },
   {
     id: 'ex-diamond-pushup-or-dips',
@@ -399,7 +416,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower under control over 2 seconds, keeping elbows tracking back (not flared wide).',
       'Drive hard to full triceps lockout on every rep.'
     ],
-    whyItWorks: 'Zero dumbbell dial-switching time when paired in a superset, and finishes the triceps and chest with high metabolic stress.'
+    whyItWorks: 'Zero dumbbell dial-switching time when paired in a superset, and finishes the triceps and chest with high metabolic stress.',
+    imagePath: './exercises/ex-diamond-pushup-or-dips.svg'
   },
 
   // ================= CHEST / UPPER BODY PRESSING & TRAPS =================
@@ -423,7 +441,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower dumbbells with a 45° elbow tuck until the bells are level with your chest for a full stretch.',
       'Press up and slightly inward with explosive power.'
     ],
-    whyItWorks: 'Builds the upper-chest shelf, front delts, and pressing triceps strength simultaneously.'
+    whyItWorks: 'Builds the upper-chest shelf, front delts, and pressing triceps strength simultaneously.',
+    imagePath: './exercises/ex-incline-db-bench-press.webp'
   },
   {
     id: 'ex-db-shrugs',
@@ -444,7 +463,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Shrug your shoulders straight up and slightly back toward your ears.',
       'Hold the top contraction for a strict 2-second count on every single rep.'
     ],
-    whyItWorks: 'Uses a 2-second isometric pause so 50–55 lb dumbbells thoroughly exhaust the upper traps and grip.'
+    whyItWorks: 'Uses a 2-second isometric pause so 50–55 lb dumbbells thoroughly exhaust the upper traps and grip.',
+    imagePath: './exercises/ex-db-shrugs.svg'
   },
   {
     id: 'ex-feet-elevated-pushup',
@@ -464,7 +484,8 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     executionCues: [
       'Keep core rigid, lower chest deep between your hands, and explode up.'
     ],
-    whyItWorks: 'Shifts more bodyweight onto the upper chest, shoulders, and triceps while requiring zero dumbbell change time.'
+    whyItWorks: 'Shifts more bodyweight onto the upper chest, shoulders, and triceps while requiring zero dumbbell change time.',
+    imagePath: './exercises/ex-feet-elevated-pushup.webp'
   }
 ];
 

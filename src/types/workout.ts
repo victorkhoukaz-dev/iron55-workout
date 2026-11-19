@@ -38,6 +38,7 @@ export interface ExerciseDefinition {
   setupCues: string[];
   executionCues: string[];
   whyItWorks: string;
+  imagePath?: string;
 }
 
 export interface PlanExerciseSlot {

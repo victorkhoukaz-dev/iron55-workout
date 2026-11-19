@@ -116,13 +116,37 @@ export function loadExercises(): ExerciseDefinition[] {
       localStorage.setItem(KEYS.EXERCISES, JSON.stringify(DEFAULT_EXERCISES));
       return DEFAULT_EXERCISES;
     }
-    // Merge any newly added default exercises that might not be in saved storage
-    const existingIds = new Set(parsed.map((e) => e.id));
-    const merged = [...parsed];
+    // Merge any newly added default exercises or updated built-in metadata (e.g. imagePath, cues)
+    const defaultById = new Map(DEFAULT_EXERCISES.map((d) => [d.id, d]));
+    let changed = false;
+    const merged = parsed.map((savedEx) => {
+      const def = defaultById.get(savedEx.id);
+      if (!def) return savedEx;
+      const needsSync =
+        (def.imagePath && savedEx.imagePath !== def.imagePath) ||
+        (!savedEx.whyItWorks && def.whyItWorks) ||
+        (!savedEx.setupCues?.length && def.setupCues.length > 0) ||
+        (!savedEx.executionCues?.length && def.executionCues.length > 0);
+      if (!needsSync) return savedEx;
+      changed = true;
+      return {
+        ...savedEx,
+        imagePath: def.imagePath || savedEx.imagePath,
+        whyItWorks: savedEx.whyItWorks || def.whyItWorks,
+        setupCues: savedEx.setupCues?.length ? savedEx.setupCues : def.setupCues,
+        executionCues: savedEx.executionCues?.length ? savedEx.executionCues : def.executionCues
+      };
+    });
+
+    const existingIds = new Set(merged.map((e) => e.id));
     for (const def of DEFAULT_EXERCISES) {
       if (!existingIds.has(def.id)) {
         merged.push(def);
+        changed = true;
       }
+    }
+    if (changed) {
+      localStorage.setItem(KEYS.EXERCISES, JSON.stringify(merged));
     }
     return merged;
   } catch {
