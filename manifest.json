@@ -1,0 +1,19 @@
+{
+  "name": "IRON 55 — Upper Body Dumbbell Tracker",
+  "short_name": "IRON 55",
+  "description": "Personal Upper Body Dumbbell & Bench Workout Planner & Logger (5-55 lbs)",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

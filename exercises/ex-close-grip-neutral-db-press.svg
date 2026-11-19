@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 405" width="720" height="405">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="45%" r="70%">
+      <stop offset="0%" stop-color="#151920" />
+      <stop offset="100%" stop-color="#0b0d10" />
+    </radialGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b97a8" />
+      <stop offset="55%" stop-color="#586577" />
+      <stop offset="100%" stop-color="#353f4d" />
+    </linearGradient>
+    <linearGradient id="shortsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2b313b" />
+      <stop offset="100%" stop-color="#191d24" />
+    </linearGradient>
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#52525b" />
+      <stop offset="100%" stop-color="#27272a" />
+    </linearGradient>
+    <linearGradient id="padGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#292e38" />
+      <stop offset="100%" stop-color="#14171c" />
+    </linearGradient>
+    <filter id="emGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <marker id="emArrow" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 9 5 L 1 8.5 z" fill="#34d399" />
+    </marker>
+  </defs>
+  <rect width="720" height="405" fill="url(#bgGrad)" />
+  <ellipse cx="180" cy="364" rx="105" ry="12" fill="#000000" fill-opacity="0.45" />
+  <ellipse cx="540" cy="364" rx="105" ry="12" fill="#000000" fill-opacity="0.45" />
+  <line x1="360" y1="48" x2="360" y2="358" stroke="#2c313a" stroke-width="1.5" />
+  <g id="left-panel"><g>
+      <rect x="88.0" y="266.0" width="10" height="96.0" rx="2" fill="#1f242c" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="244.0" y="266.0" width="10" height="96.0" rx="2" fill="#1f242c" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="78.0" y="356.0" width="30" height="6" rx="2" fill="#272c35" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="234.0" y="356.0" width="30" height="6" rx="2" fill="#272c35" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="90.0" y="280.0" width="162.0" height="8" rx="2" fill="#181c22" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="74.0" y="258.0" width="194.0" height="14" rx="5" fill="url(#padGrad)" stroke="#0b0d10" stroke-width="2" />
+    </g>
+<path d="M 216.3 262.9 Q 245.0 268.3 274.7 264.9 Q 287.6 253.2 277.3 239.1 Q 249.0 229.7 219.7 229.1 Q 202.8 244.4 216.3 262.9 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 264.0 252.9 Q 266.4 305.0 276.0 356.6 Q 284.6 363.2 292.0 355.4 Q 293.6 303.0 288.0 251.1 Q 275.2 241.2 264.0 252.9 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 199.0 246.0 Q 200.0 232.0 221.0 232.0 Q 242.0 232.0 242.0 246.0 Q 242.0 260.0 220.0 260.0 Q 198.0 260.0 199.0 246.0 Z" fill="url(#shortsGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 217.1 230.0 Q 179.9 227.5 143.0 232.0 Q 127.8 250.9 145.0 268.0 Q 182.1 268.5 218.9 262.0 Q 232.4 245.2 217.1 230.0 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 140.0 236.2 Q 120.2 230.8 99.8 229.2 Q 90.1 236.4 96.2 246.8 Q 115.8 253.2 136.0 255.8 Q 146.8 247.8 140.0 236.2 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<ellipse cx="90.0" cy="236.0" rx="17" ry="14" transform="rotate(-10 90.0 236.0)" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" />
+<path d="M 121.9 244.4 Q 127.5 261.0 137.8 275.6 Q 149.2 279.4 154.2 268.4 Q 150.5 251.0 142.1 235.6 Q 128.0 230.9 121.9 244.4 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 154.9 273.5 Q 161.1 243.7 162.4 213.1 Q 157.0 206.2 149.6 210.9 Q 140.9 240.3 137.1 270.5 Q 144.7 280.0 154.9 273.5 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<g transform="translate(156.0 212.0) rotate(90)">
+      <rect x="-10.2" y="-2.3" width="20.4" height="4.7" rx="2" fill="#71717a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="-16.7" y="-10.2" width="8.5" height="20.4" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="-20.4" y="-7.2" width="4.7" height="14.4" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="8.2" y="-10.2" width="8.5" height="20.4" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="15.7" y="-7.2" width="4.7" height="14.4" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+    </g>
+<path d="M 133.3 255.4 Q 139.8 272.1 151.5 286.2 Q 163.8 289.6 168.5 277.8 Q 164.2 259.9 154.7 244.6 Q 139.2 240.3 133.3 255.4 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 169.4 283.5 Q 175.7 252.7 176.9 221.1 Q 171.0 213.8 163.1 218.9 Q 154.3 249.3 150.6 280.5 Q 158.6 290.4 169.4 283.5 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<g transform="translate(170.0 220.0) rotate(90)">
+      <rect x="-10.8" y="-2.5" width="21.6" height="5.0" rx="2" fill="#71717a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="-17.8" y="-10.8" width="9.0" height="21.6" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="-21.8" y="-7.7" width="5.0" height="15.3" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="8.8" y="-10.8" width="9.0" height="21.6" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="16.8" y="-7.7" width="5.0" height="15.3" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+    </g>
+<g transform="translate(152.0 226.0) rotate(-8)" filter="url(#emGlow)">
+      <ellipse cx="0" cy="0" rx="16.0" ry="9.0" fill="#10b981" fill-opacity="0.52" />
+      <ellipse cx="0" cy="0" rx="8.8" ry="5.0" fill="#6ee7b7" fill-opacity="0.42" />
+    </g>
+<g transform="translate(152.0 266.0) rotate(55)" filter="url(#emGlow)">
+      <ellipse cx="0" cy="0" rx="13.0" ry="8.0" fill="#10b981" fill-opacity="0.52" />
+      <ellipse cx="0" cy="0" rx="7.2" ry="4.4" fill="#6ee7b7" fill-opacity="0.42" />
+    </g></g>
+  <g id="right-panel" transform="translate(360 0)"><g>
+      <rect x="88.0" y="266.0" width="10" height="96.0" rx="2" fill="#1f242c" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="244.0" y="266.0" width="10" height="96.0" rx="2" fill="#1f242c" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="78.0" y="356.0" width="30" height="6" rx="2" fill="#272c35" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="234.0" y="356.0" width="30" height="6" rx="2" fill="#272c35" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="90.0" y="280.0" width="162.0" height="8" rx="2" fill="#181c22" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="74.0" y="258.0" width="194.0" height="14" rx="5" fill="url(#padGrad)" stroke="#0b0d10" stroke-width="2" />
+    </g>
+<path d="M 216.3 262.9 Q 245.0 268.3 274.7 264.9 Q 287.6 253.2 277.3 239.1 Q 249.0 229.7 219.7 229.1 Q 202.8 244.4 216.3 262.9 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 264.0 252.9 Q 266.4 305.0 276.0 356.6 Q 284.6 363.2 292.0 355.4 Q 293.6 303.0 288.0 251.1 Q 275.2 241.2 264.0 252.9 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 199.0 246.0 Q 200.0 232.0 221.0 232.0 Q 242.0 232.0 242.0 246.0 Q 242.0 260.0 220.0 260.0 Q 198.0 260.0 199.0 246.0 Z" fill="url(#shortsGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 217.1 230.0 Q 179.9 227.5 143.0 232.0 Q 127.8 250.9 145.0 268.0 Q 182.1 268.5 218.9 262.0 Q 232.4 245.2 217.1 230.0 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 140.0 236.2 Q 120.2 230.8 99.8 229.2 Q 90.1 236.4 96.2 246.8 Q 115.8 253.2 136.0 255.8 Q 146.8 247.8 140.0 236.2 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<ellipse cx="90.0" cy="236.0" rx="17" ry="14" transform="rotate(-10 90.0 236.0)" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" />
+<path d="M 142.7 242.7 Q 151.2 215.0 154.7 186.2 Q 148.0 176.1 137.3 181.8 Q 126.8 209.0 121.3 237.3 Q 129.6 249.6 142.7 242.7 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 155.0 184.6 Q 158.2 153.7 156.5 122.4 Q 150.4 116.2 143.5 121.6 Q 137.8 152.3 137.0 183.4 Q 145.5 192.1 155.0 184.6 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<g transform="translate(150.0 122.0) rotate(90)">
+      <rect x="-10.2" y="-2.3" width="20.4" height="4.7" rx="2" fill="#71717a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="-16.7" y="-10.2" width="8.5" height="20.4" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="-20.4" y="-7.2" width="4.7" height="14.4" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="8.2" y="-10.2" width="8.5" height="20.4" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="15.7" y="-7.2" width="4.7" height="14.4" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+    </g>
+<path d="M 155.6 253.2 Q 165.2 224.6 169.2 194.5 Q 162.3 183.8 150.8 189.5 Q 138.8 217.4 132.4 246.8 Q 141.1 260.4 155.6 253.2 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<path d="M 169.5 192.9 Q 173.8 161.0 173.0 128.7 Q 166.6 121.7 159.0 127.3 Q 152.2 159.0 150.5 191.1 Q 159.2 200.5 169.5 192.9 Z" fill="url(#bodyGrad)" stroke="#11151a" stroke-width="2" stroke-linejoin="round" />
+<g transform="translate(166.0 128.0) rotate(90)">
+      <rect x="-10.8" y="-2.5" width="21.6" height="5.0" rx="2" fill="#71717a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="-17.8" y="-10.8" width="9.0" height="21.6" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="-21.8" y="-7.7" width="5.0" height="15.3" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+      <rect x="8.8" y="-10.8" width="9.0" height="21.6" rx="2.5" fill="url(#metalGrad)" stroke="#0b0d10" stroke-width="1.8" />
+      <rect x="16.8" y="-7.7" width="5.0" height="15.3" rx="2" fill="#27272a" stroke="#0b0d10" stroke-width="1.5" />
+    </g>
+<g transform="translate(152.0 226.0) rotate(-8)" filter="url(#emGlow)">
+      <ellipse cx="0" cy="0" rx="16.0" ry="9.0" fill="#10b981" fill-opacity="0.92" />
+      <ellipse cx="0" cy="0" rx="8.8" ry="5.0" fill="#6ee7b7" fill-opacity="0.85" />
+    </g>
+<g transform="translate(152.0 221.0) rotate(55)" filter="url(#emGlow)">
+      <ellipse cx="0" cy="0" rx="13.0" ry="8.0" fill="#10b981" fill-opacity="0.92" />
+      <ellipse cx="0" cy="0" rx="7.2" ry="4.4" fill="#6ee7b7" fill-opacity="0.85" />
+    </g>
+<path d="M 188.0 214.0 Q 194.0 168.0 186.0 126.0" fill="none" stroke="#10b981" stroke-width="2.6" stroke-linecap="round" marker-end="url(#emArrow)" opacity="0.92" /></g>
+</svg>
