@@ -112,7 +112,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower under control until the dumbbells touch ear/chin level.'
     ],
     whyItWorks: 'Primary compound builder for pressing strength and anterior/lateral deltoid mass.',
-    imagePath: './exercises/ex-seated-db-shoulder-press.svg'
+    imagePath: './exercises/ex-seated-db-shoulder-press.webp'
   },
   {
     id: 'ex-db-push-press',
@@ -134,7 +134,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower the weights back to your shoulders using a strict, slow 3-second negative.'
     ],
     whyItWorks: 'Develops upper-body explosive power and lets you overload the shoulders and triceps with 5–10 lbs more on the eccentric.',
-    imagePath: './exercises/ex-db-push-press.svg'
+    imagePath: './exercises/ex-db-push-press.webp'
   },
   {
     id: 'ex-db-lateral-raise',
@@ -156,7 +156,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower over a controlled 2-second count without resting completely at your sides.'
     ],
     whyItWorks: 'Directly isolates the lateral deltoid head responsible for shoulder width and the V-taper silhouette.',
-    imagePath: './exercises/ex-db-lateral-raise.svg'
+    imagePath: './exercises/ex-db-lateral-raise.webp'
   },
   {
     id: 'ex-chest-supported-rear-delt-fly',
@@ -178,7 +178,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Pause briefly at the top, then control the negative.'
     ],
     whyItWorks: 'Completes the 3D shoulder cap and balances heavy pressing to keep shoulder joints healthy.',
-    imagePath: './exercises/ex-chest-supported-rear-delt-fly.svg'
+    imagePath: './exercises/ex-chest-supported-rear-delt-fly.webp'
   },
   {
     id: 'ex-arnold-press',
@@ -199,7 +199,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Reverse the rotation slowly on the way down for maximum time under tension across all three delt heads.'
     ],
     whyItWorks: 'Increases range of motion and time under tension so moderate dumbbell weights stimulate maximum delt hypertrophy.',
-    imagePath: './exercises/ex-arnold-press.svg'
+    imagePath: './exercises/ex-arnold-press.webp'
   },
 
   // ================= BICEPS & FOREARMS =================
@@ -223,7 +223,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower all the way down into a full 1-second biceps stretch at the bottom of every rep.'
     ],
     whyItWorks: 'Places maximal stretch tension on the long head of the biceps, proven to drive superior biceps peak and growth.',
-    imagePath: './exercises/ex-incline-db-curl.svg'
+    imagePath: './exercises/ex-incline-db-curl.webp'
   },
   {
     id: 'ex-hammer-curl',
@@ -245,7 +245,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Control the descent for 2 seconds before initiating the opposite arm.'
     ],
     whyItWorks: 'Targets the brachialis (underneath the biceps, pushing it up for thicker arms) and the brachioradialis for thick forearms.',
-    imagePath: './exercises/ex-hammer-curl.svg'
+    imagePath: './exercises/ex-hammer-curl.webp'
   },
   {
     id: 'ex-spider-preacher-curl',
@@ -267,7 +267,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Lower slowly (2–3s) without using torso momentum.'
     ],
     whyItWorks: 'Zero-cheat isolation of the biceps short head for front-view arm width and peak contraction.',
-    imagePath: './exercises/ex-spider-preacher-curl.svg'
+    imagePath: './exercises/ex-spider-preacher-curl.webp'
   },
   {
     id: 'ex-zottman-curl',
@@ -288,7 +288,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'At the top, rotate your wrists 180° so palms face down (pronated) and lower slowly over 3 seconds.'
     ],
     whyItWorks: 'Combines a heavy supinated concentric for the biceps with an overloaded pronated eccentric for massive forearms and elbow health.',
-    imagePath: './exercises/ex-zottman-curl.svg'
+    imagePath: './exercises/ex-zottman-curl.webp'
   },
   {
     id: 'ex-concentration-curl',
@@ -309,7 +309,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Squeeze hard at the top, then extend fully until the arm is nearly straight.'
     ],
     whyItWorks: 'Highest EMG biceps activation of any curl variation—awesome finisher when chasing a pump.',
-    imagePath: './exercises/ex-concentration-curl.svg'
+    imagePath: './exercises/ex-concentration-curl.webp'
   },
 
   // ================= TRICEPS =================
@@ -333,7 +333,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Extend powerfully back to the starting angle without moving your upper arms.'
     ],
     whyItWorks: 'Hits all three heads of the triceps with neutral-grip wrist comfort.',
-    imagePath: './exercises/ex-db-skullcrusher.svg'
+    imagePath: './exercises/ex-db-skullcrusher.webp'
   },
   {
     id: 'ex-overhead-db-triceps-ext',
@@ -355,7 +355,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Press straight up to full lockout.'
     ],
     whyItWorks: 'Overhead arm elevation maximally stretches the triceps long head for upper-arm sleeve-filling size.',
-    imagePath: './exercises/ex-overhead-db-triceps-ext.svg'
+    imagePath: './exercises/ex-overhead-db-triceps-ext.webp'
   },
   {
     id: 'ex-close-grip-neutral-db-press',
@@ -445,7 +445,7 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
       'Hold the top contraction for a strict 2-second count on every single rep.'
     ],
     whyItWorks: 'Uses a 2-second isometric pause so 50–55 lb dumbbells thoroughly exhaust the upper traps and grip.',
-    imagePath: './exercises/ex-db-shrugs.svg'
+    imagePath: './exercises/ex-db-shrugs.webp'
   },
   {
     id: 'ex-feet-elevated-pushup',

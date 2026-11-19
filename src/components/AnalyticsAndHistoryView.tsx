@@ -30,7 +30,7 @@ export const AnalyticsAndHistoryView: React.FC<AnalyticsAndHistoryViewProps> = (
     const ids = new Set<string>();
     logs.forEach((l) =>
       l.exercises.forEach((ex) => {
-        if (ex.sets.some((s) => s.completed && s.reps > 0)) {
+        if (ex.sets.some((s) => s.completed && !s.isWarmup && s.reps > 0)) {
           ids.add(ex.exerciseId);
         }
       })
@@ -344,18 +344,47 @@ export const AnalyticsAndHistoryView: React.FC<AnalyticsAndHistoryViewProps> = (
                     {log.exercises.map((ex, idx) => {
                       const doneSets = ex.sets.filter((s) => s.completed);
                       if (doneSets.length === 0) return null;
+                      let workCounter = 0;
+                      const effortBadgeStyles: Record<string, string> = {
+                        easy: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                        solid: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                        hard: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                        max: 'bg-red-500/15 text-red-300 border-red-500/30'
+                      };
                       return (
                         <div key={idx} className="space-y-1">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-zinc-200">
                               {ex.supersetTag ? `[${ex.supersetTag}] ` : ''}
                               {ex.exerciseName}
                             </span>
-                            <span className="text-[10px] text-zinc-500">{ex.primaryMuscle}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {ex.effort && (
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                                    effortBadgeStyles[ex.effort] || 'bg-zinc-800 text-zinc-300'
+                                  }`}
+                                >
+                                  {ex.effort}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-zinc-500">{ex.primaryMuscle}</span>
+                            </div>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {doneSets.map((s, sIdx) => {
                               const w = s.weightLbs ?? 0;
+                              if (s.isWarmup) {
+                                return (
+                                  <span
+                                    key={sIdx}
+                                    className="px-2 py-0.5 rounded-lg font-mono text-[11px] border bg-amber-500/10 border-amber-500/30 text-amber-300"
+                                  >
+                                    W: {w > 0 ? `${w}lb` : 'BW'} × {s.reps}
+                                  </span>
+                                );
+                              }
+                              workCounter += 1;
                               return (
                                 <span
                                   key={sIdx}
@@ -365,7 +394,7 @@ export const AnalyticsAndHistoryView: React.FC<AnalyticsAndHistoryViewProps> = (
                                       : 'bg-zinc-900 border-zinc-800 text-zinc-300'
                                   }`}
                                 >
-                                  #{sIdx + 1}: {w > 0 ? `${w}lb` : 'BW'} × {s.reps}
+                                  #{workCounter}: {w > 0 ? `${w}lb` : 'BW'} × {s.reps}
                                   {s.isPR ? ' ★PR' : ''}
                                   {w > 0 ? ` (1RM ${calculateEstimated1RM(w, s.reps)})` : ''}
                                 </span>

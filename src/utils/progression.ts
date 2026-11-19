@@ -1,11 +1,16 @@
 import {
   ExerciseDefinition,
   LoggedExercise,
+  LoggedSet,
   PlanExerciseSlot,
   ProgressionRecommendation,
   WorkoutLog,
   WorkoutPlan
 } from '../types/workout';
+
+export function isWorkingSet(s: LoggedSet): boolean {
+  return Boolean(s.completed && !s.isWarmup && s.reps > 0);
+}
 
 export const DUMBBELL_WEIGHT_STEPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
@@ -74,7 +79,7 @@ export function getProgressionForExercise(
 
   for (const log of sortedLogs) {
     const found = log.exercises.find(
-      (ex) => ex.exerciseId === slot.exerciseId && ex.sets.some((s) => s.completed && s.reps > 0)
+      (ex) => ex.exerciseId === slot.exerciseId && ex.sets.some(isWorkingSet)
     );
     if (found) {
       lastLoggedEx = found;
@@ -118,7 +123,11 @@ export function getProgressionForExercise(
     };
   }
 
-  const completedSets = lastLoggedEx.sets.filter((s) => s.completed && s.reps > 0);
+  const completedSets = lastLoggedEx.sets.filter(isWorkingSet);
+  const previousWorkingSets = completedSets.map((s) => ({
+    weightLbs: s.weightLbs ?? 0,
+    reps: s.reps
+  }));
   const lastSummary = completedSets
     .map((s) => {
       const w = s.weightLbs ?? 0;
@@ -126,7 +135,7 @@ export function getProgressionForExercise(
     })
     .join(', ');
 
-  // Primary working weight from last session (use highest weight among completed sets)
+  // Primary working weight from last session (use highest weight among completed working sets)
   const workingWeight = Math.max(...completedSets.map((s) => s.weightLbs ?? 0));
   const avgReps = Math.round(
     completedSets.reduce((sum, s) => sum + s.reps, 0) / completedSets.length
@@ -144,7 +153,21 @@ export function getProgressionForExercise(
         badgeText: `55 LB MAX • AIM FOR ${repMax + 1} REPS OR 3s NEGATIVE`,
         reason: `You crushed all sets at 55 lbs (${lastSummary}). Push for +1 rep or use a strict 3-second lowering tempo.`,
         lastSessionDate: lastLogDate,
-        lastSetsSummary: lastSummary
+        lastSetsSummary: lastSummary,
+        previousWorkingSets
+      };
+    }
+
+    if (lastLoggedEx.effort === 'max') {
+      return {
+        action: 'ADD_REPS',
+        recommendedWeightLbs: workingWeight,
+        recommendedReps: repMax,
+        badgeText: `CONSOLIDATE • REPEAT ${workingWeight > 0 ? `${workingWeight} LBS` : 'BW'} × ${repMax}`,
+        reason: `Hit ${repMax} reps last time at Max effort (${lastSummary}). Repeat this weight for smoother reps before jumping +5 lbs.`,
+        lastSessionDate: lastLogDate,
+        lastSetsSummary: lastSummary,
+        previousWorkingSets
       };
     }
 
@@ -157,7 +180,8 @@ export function getProgressionForExercise(
         badgeText: `BEAT LAST • AIM FOR ${nextReps} REPS`,
         reason: `You hit the top of the rep range last session (${lastSummary}). Add 1–2 reps per set or place a dumbbell on your lap.`,
         lastSessionDate: lastLogDate,
-        lastSetsSummary: lastSummary
+        lastSetsSummary: lastSummary,
+        previousWorkingSets
       };
     }
 
@@ -169,11 +193,17 @@ export function getProgressionForExercise(
       badgeText: `LEVEL UP +5 LBS → ${nextWeight} LBS × ${repMin}`,
       reason: `Hit ${repMax}+ reps across all ${completedSets.length} sets last time (${lastSummary}). Time to move up 5 lbs!`,
       lastSessionDate: lastLogDate,
-      lastSetsSummary: lastSummary
+      lastSetsSummary: lastSummary,
+      previousWorkingSets
     };
   }
 
-  const nextTargetReps = Math.min(repMax, Math.max(repMin, avgReps + 1));
+  const repStep = lastLoggedEx.effort === 'easy' ? 2 : 1;
+  const nextTargetReps = Math.min(repMax, Math.max(repMin, avgReps + repStep));
+  const easyHint =
+    lastLoggedEx.effort === 'easy'
+      ? ` Last session felt Easy — aim for +2 reps!`
+      : '';
   return {
     action: 'ADD_REPS',
     recommendedWeightLbs: workingWeight,
@@ -181,9 +211,10 @@ export function getProgressionForExercise(
     badgeText: `BEAT LAST • ${workingWeight > 0 ? `${workingWeight} LBS` : 'BW'} × ${nextTargetReps} REPS`,
     reason: `Last session: ${lastSummary}. Keep ${
       workingWeight > 0 ? `${workingWeight} lbs` : 'bodyweight'
-    } and add +1 rep per set until all sets hit ${repMax}.`,
+    } and add +${repStep} rep${repStep > 1 ? 's' : ''} per set until all sets hit ${repMax}.${easyHint}`,
     lastSessionDate: lastLogDate,
-    lastSetsSummary: lastSummary
+    lastSetsSummary: lastSummary,
+    previousWorkingSets
   };
 }
 
@@ -211,7 +242,7 @@ export function getExerciseHistory(
   for (const log of chronological) {
     const ex = log.exercises.find((e) => e.exerciseId === exerciseId);
     if (!ex) continue;
-    const validSets = ex.sets.filter((s) => s.completed && s.reps > 0);
+    const validSets = ex.sets.filter(isWorkingSet);
     if (validSets.length === 0) continue;
 
     let best1RM = 0;
@@ -263,7 +294,7 @@ export function evaluateAndMarkPRs(
     let historicalBest1RM = history.reduce((max, pt) => Math.max(max, pt.estimated1RM), 0);
 
     const newSets = ex.sets.map((s) => {
-      if (!s.completed || s.reps <= 0) {
+      if (!isWorkingSet(s)) {
         return { ...s, isPR: false };
       }
       const current1RM = calculateEstimated1RM(s.weightLbs ?? 0, s.reps);

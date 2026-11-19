@@ -195,7 +195,7 @@ export const App: React.FC = () => {
     }));
 
     const completedSetsCount = normalizedExercises.reduce(
-      (sum, ex) => sum + ex.sets.filter((s) => s.completed && s.reps > 0).length,
+      (sum, ex) => sum + ex.sets.filter((s) => s.completed && !s.isWarmup && s.reps > 0).length,
       0
     );
 
@@ -203,7 +203,7 @@ export const App: React.FC = () => {
       (sum, ex) =>
         sum +
         ex.sets
-          .filter((s) => s.completed && s.reps > 0)
+          .filter((s) => s.completed && !s.isWarmup && s.reps > 0)
           .reduce((sAcc, s) => {
             const w = s.weightLbs ?? 0;
             return sAcc + (w > 0 ? w : 0) * s.reps;

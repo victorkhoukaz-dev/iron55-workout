@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Check,
   ChevronDown,
@@ -11,8 +11,10 @@ import {
   Minus,
   Plus,
   RefreshCw,
+  Repeat,
   SkipForward,
   Sparkles,
+  Sun,
   Trash2,
   Trophy,
   Volume2,
@@ -21,6 +23,7 @@ import {
 import { getExerciseImagePath } from '../data/exerciseMedia';
 import {
   ActiveWorkoutDraft,
+  EffortRating,
   ExerciseDefinition,
   LoggedExercise,
   LoggedSet,
@@ -33,6 +36,7 @@ import {
   snapToDumbbellIncrement
 } from '../utils/progression';
 import { playRestCompleteAlert, playSetCheckBeep } from '../utils/audio';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 
 interface ActiveWorkoutLoggerProps {
@@ -76,6 +80,24 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
   } | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState<boolean>(false);
   const [modalExerciseIdx, setModalExerciseIdx] = useState<number | null>(null);
+  const [wakeLockEnabled, setWakeLockEnabled] = useState<boolean>(true);
+  const [autoFollowSuperset, setAutoFollowSuperset] = useState<boolean>(true);
+  const [highlightedExIdx, setHighlightedExIdx] = useState<number | null>(null);
+
+  const cardRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const highlightTimersRef = useRef<{ scroll?: number; clear?: number }>({});
+  const wakeLock = useWakeLock(wakeLockEnabled);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimersRef.current.scroll) {
+        window.clearTimeout(highlightTimersRef.current.scroll);
+      }
+      if (highlightTimersRef.current.clear) {
+        window.clearTimeout(highlightTimersRef.current.clear);
+      }
+    };
+  }, []);
 
   // Elapsed workout timer
   useEffect(() => {
@@ -129,25 +151,62 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     onUpdateDraft({ ...draft, exercises: nextExercises });
   };
 
-  const triggerSetCompletedEffects = (exIdx: number, setIdx: number) => {
-    const ex = draft.exercises[exIdx];
+  const triggerSetCompletedEffects = (
+    exIdx: number,
+    setIdx: number,
+    isWarmup: boolean,
+    latestExercises: LoggedExercise[]
+  ) => {
+    const ex = latestExercises[exIdx];
     playSetCheckBeep();
+
+    if (isWarmup) {
+      startRestTimer(30, `${ex.exerciseName} — Warm-up done, ready for Working Set 1`);
+      return;
+    }
+
     const exDef = getExerciseDef(ex.exerciseId);
     const planSlot = plan?.exercises.find((s) => s.exerciseId === ex.exerciseId);
     const defaultRest = planSlot?.restSeconds || exDef?.defaultRestSeconds || 60;
 
-    // Determine smart superset hint
+    // Determine smart superset partner
     let hint = `${ex.exerciseName} — Set ${setIdx + 1} done`;
-    if (ex.supersetTag) {
+    let partnerIdx = -1;
+    if (ex.supersetTag && ex.supersetTag.length >= 2) {
       const prefix = ex.supersetTag.charAt(0);
       const num = ex.supersetTag.charAt(1);
       const partnerTag = `${prefix}${num === '1' ? '2' : '1'}`;
-      const partner = draft.exercises.find((e) => e.supersetTag === partnerTag);
-      if (partner) {
+      partnerIdx = latestExercises.findIndex((e) => e.supersetTag === partnerTag);
+      if (partnerIdx >= 0) {
+        const partner = latestExercises[partnerIdx];
         hint = `Up next in Superset: ${partnerTag} ${partner.exerciseName}`;
       }
     }
     startRestTimer(defaultRest, hint);
+
+    if (autoFollowSuperset && partnerIdx >= 0) {
+      const partnerHasRemainingWorkingSet = latestExercises[partnerIdx].sets.some(
+        (s) => !s.completed && !s.isWarmup
+      );
+      if (partnerHasRemainingWorkingSet) {
+        if (highlightTimersRef.current.scroll) {
+          window.clearTimeout(highlightTimersRef.current.scroll);
+        }
+        if (highlightTimersRef.current.clear) {
+          window.clearTimeout(highlightTimersRef.current.clear);
+        }
+        highlightTimersRef.current.scroll = window.setTimeout(() => {
+          cardRefs.current[partnerIdx]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+          setHighlightedExIdx(partnerIdx);
+        }, 220);
+        highlightTimersRef.current.clear = window.setTimeout(() => {
+          setHighlightedExIdx(null);
+        }, 2200);
+      }
+    }
   };
 
   const applyWeightWithPropagation = (
@@ -156,18 +215,20 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     weight: number,
     completeTarget = false
   ) => {
+    let completedIsWarmup = false;
     const nextExercises = draft.exercises.map((ex, i) => {
       if (i !== exIdx) return ex;
       const nextSets = ex.sets.map((s, j) => {
         if (j === setIdx) {
+          completedIsWarmup = Boolean(s.isWarmup);
           return {
             ...s,
             weightLbs: weight,
             completed: completeTarget ? true : s.completed
           };
         }
-        // Auto-fill remaining unset sets in this exercise once the user picks a weight
-        if (!s.completed && s.weightLbs === null) {
+        // Auto-fill remaining unset working sets in this exercise once the user picks a weight
+        if (!s.completed && !s.isWarmup && s.weightLbs === null) {
           return { ...s, weightLbs: weight };
         }
         return s;
@@ -178,7 +239,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     onUpdateDraft({ ...draft, exercises: nextExercises });
 
     if (completeTarget) {
-      triggerSetCompletedEffects(exIdx, setIdx);
+      triggerSetCompletedEffects(exIdx, setIdx, completedIsWarmup, nextExercises);
     }
   };
 
@@ -193,11 +254,69 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     }
 
     const nextCompleted = !currentSet.completed;
-    updateSet(exIdx, setIdx, { completed: nextCompleted });
+    const nextExercises = draft.exercises.map((item, i) => {
+      if (i !== exIdx) return item;
+      return {
+        ...item,
+        sets: item.sets.map((s, j) => (j === setIdx ? { ...s, completed: nextCompleted } : s))
+      };
+    });
+    onUpdateDraft({ ...draft, exercises: nextExercises });
 
     if (nextCompleted) {
-      triggerSetCompletedEffects(exIdx, setIdx);
+      triggerSetCompletedEffects(
+        exIdx,
+        setIdx,
+        Boolean(currentSet.isWarmup),
+        nextExercises
+      );
     }
+  };
+
+  const handleToggleWarmup = (exIdx: number, setIdx: number) => {
+    const current = draft.exercises[exIdx].sets[setIdx];
+    updateSet(exIdx, setIdx, { isWarmup: !current.isWarmup });
+  };
+
+  const handleAddWarmupSet = (exIdx: number) => {
+    const ex = draft.exercises[exIdx];
+    const firstWorking = ex.sets.find((s) => !s.isWarmup);
+    const workingWeight = firstWorking?.weightLbs ?? null;
+    const warmupWeight =
+      workingWeight === null
+        ? null
+        : workingWeight === 0
+        ? 0
+        : Math.max(5, snapToDumbbellIncrement(workingWeight * 0.55));
+
+    const newWarmup: LoggedSet = {
+      setNumber: 1,
+      weightLbs: warmupWeight,
+      reps: 8,
+      completed: false,
+      isWarmup: true
+    };
+
+    const insertIdx = ex.sets.findIndex((s) => !s.isWarmup);
+    const updatedSets =
+      insertIdx === -1
+        ? [...ex.sets, newWarmup]
+        : [...ex.sets.slice(0, insertIdx), newWarmup, ...ex.sets.slice(insertIdx)];
+
+    const renumbered = updatedSets.map((s, idx) => ({ ...s, setNumber: idx + 1 }));
+    const nextExercises = draft.exercises.map((item, idx) =>
+      idx === exIdx ? { ...item, sets: renumbered } : item
+    );
+    onUpdateDraft({ ...draft, exercises: nextExercises });
+  };
+
+  const handleSetEffort = (exIdx: number, rating: EffortRating) => {
+    const current = draft.exercises[exIdx].effort;
+    const nextEffort = current === rating ? undefined : rating;
+    const nextExercises = draft.exercises.map((item, idx) =>
+      idx === exIdx ? { ...item, effort: nextEffort } : item
+    );
+    onUpdateDraft({ ...draft, exercises: nextExercises });
   };
 
   const handleAdjustWeight = (exIdx: number, setIdx: number, delta: number) => {
@@ -309,9 +428,16 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     setShowAddExerciseModal(false);
   };
 
-  // Totals
-  const totalSetsCount = draft.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+  // Totals (working sets only for volume & target progress)
+  const totalSetsCount = draft.exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => !s.isWarmup).length,
+    0
+  );
   const completedSetsCount = draft.exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => s.completed && !s.isWarmup).length,
+    0
+  );
+  const anyCompletedCount = draft.exercises.reduce(
     (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
     0
   );
@@ -319,7 +445,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     (acc, ex) =>
       acc +
       ex.sets
-        .filter((s) => s.completed)
+        .filter((s) => s.completed && !s.isWarmup)
         .reduce((sAcc, s) => {
           const w = s.weightLbs ?? 0;
           return sAcc + (w > 0 ? w : 0) * s.reps;
@@ -370,9 +496,9 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
               <button
                 type="button"
                 onClick={() => onFinishWorkout(draft, elapsedSeconds)}
-                disabled={completedSetsCount === 0}
+                disabled={anyCompletedCount === 0}
                 className={`px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 shadow-lg transition ${
-                  completedSetsCount > 0
+                  anyCompletedCount > 0
                     ? 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-emerald-500/20 cursor-pointer'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 }`}
@@ -383,17 +509,45 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
             </div>
           </div>
 
-          {/* Progress bar & Volume pill */}
-          <div className="mt-2.5 flex items-center gap-3">
+          {/* Progress bar, Volume & Gym Mode toggles */}
+          <div className="mt-2.5 flex items-center gap-2">
             <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <span className="text-xs font-mono text-zinc-400 whitespace-nowrap">
-              {currentVolumeLbs.toLocaleString()} <span className="text-zinc-500">lbs vol</span>
+            <span className="text-[11px] font-mono text-zinc-400 whitespace-nowrap">
+              {currentVolumeLbs.toLocaleString()} <span className="text-zinc-500">lbs</span>
             </span>
+            {wakeLock.supported && (
+              <button
+                type="button"
+                onClick={() => setWakeLockEnabled((v) => !v)}
+                title="Keep phone screen awake during workout"
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 cursor-pointer transition ${
+                  wakeLockEnabled && wakeLock.active
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                }`}
+              >
+                <Sun className="w-3 h-3" />
+                Awake
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setAutoFollowSuperset((v) => !v)}
+              title="Auto-focus paired superset exercise after checking off a working set"
+              className={`px-2 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 cursor-pointer transition ${
+                autoFollowSuperset
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+              }`}
+            >
+              <Repeat className="w-3 h-3" />
+              Auto-Pair
+            </button>
           </div>
         </div>
       </div>
@@ -452,8 +606,13 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
           return (
             <div
               key={`${ex.exerciseId}-${exIdx}`}
-              className={`rounded-2xl border transition-all ${
-                allDone
+              ref={(el) => {
+                cardRefs.current[exIdx] = el;
+              }}
+              className={`rounded-2xl border transition-all duration-300 ${
+                highlightedExIdx === exIdx
+                  ? 'bg-zinc-900 border-emerald-400 ring-2 ring-emerald-400/70 shadow-xl shadow-emerald-500/20'
+                  : allDone
                   ? 'bg-zinc-900/50 border-emerald-500/40'
                   : 'bg-zinc-900 border-zinc-800'
               } overflow-hidden shadow-lg`}
@@ -610,153 +769,250 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
                   <div className="col-span-2 text-center">Done</div>
                 </div>
 
-                {ex.sets.map((set, setIdx) => {
-                  const hitTopRange = set.reps >= ex.repRangeMax;
-                  return (
-                    <div
-                      key={setIdx}
-                      className={`grid grid-cols-12 gap-1.5 items-center p-2 rounded-xl border transition ${
-                        set.completed
-                          ? 'bg-emerald-950/25 border-emerald-500/35'
-                          : 'bg-zinc-950/70 border-zinc-800/80'
-                      }`}
-                    >
-                      {/* Set # */}
-                      <div className="col-span-1 flex justify-center">
-                        <span
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-extrabold ${
-                            set.completed
-                              ? 'bg-emerald-500 text-zinc-950'
-                              : 'bg-zinc-800 text-zinc-400'
-                          }`}
-                        >
-                          {setIdx + 1}
-                        </span>
-                      </div>
+                {(() => {
+                  let workingSetNum = 0;
+                  return ex.sets.map((set, setIdx) => {
+                    const isWarmup = Boolean(set.isWarmup);
+                    if (!isWarmup) {
+                      workingSetNum += 1;
+                    }
+                    const currentWorkingIdx = workingSetNum - 1;
+                    const prevWorkingSet = !isWarmup
+                      ? prog.previousWorkingSets?.[currentWorkingIdx]
+                      : undefined;
+                    const hitTopRange = !isWarmup && set.reps >= ex.repRangeMax;
 
-                      {/* Weight Stepper (-5 / tap picker / +5) */}
-                      <div className="col-span-5 flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustWeight(exIdx, setIdx, -5)}
-                          className="w-8 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 font-bold text-xs flex items-center justify-center select-none cursor-pointer"
-                          aria-label="Decrease weight by 5 lbs"
-                        >
-                          -5
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setWeightPickerTarget({ exIdx, setIdx })}
-                          className={`flex-1 h-9 px-1 rounded-lg bg-zinc-900 border text-center font-mono font-extrabold text-sm flex flex-col items-center justify-center leading-none cursor-pointer transition ${
-                            set.weightLbs === null
-                              ? 'border-amber-500/45 hover:border-amber-400 text-amber-300'
-                              : 'border-zinc-700/80 hover:border-emerald-500/50 text-zinc-100'
-                          }`}
-                          title="Tap to pick dumbbell weight (0–55 lbs)"
-                        >
-                          <span>
-                            {set.weightLbs === null
-                              ? '—'
-                              : set.weightLbs === 0
-                              ? 'BW'
-                              : set.weightLbs}
-                          </span>
-                          <span
-                            className={`text-[9px] font-sans ${
-                              set.weightLbs === null ? 'text-amber-400/90' : 'text-zinc-500'
+                    return (
+                      <div
+                        key={setIdx}
+                        className={`p-2 rounded-xl border transition space-y-1.5 ${
+                          set.completed
+                            ? isWarmup
+                              ? 'bg-amber-950/20 border-amber-500/35'
+                              : 'bg-emerald-950/25 border-emerald-500/35'
+                            : isWarmup
+                            ? 'bg-zinc-950/70 border-amber-500/25'
+                            : 'bg-zinc-950/70 border-zinc-800/80'
+                        }`}
+                      >
+                        {(isWarmup || prevWorkingSet) && (
+                          <div className="flex items-center justify-between px-1 text-[10px]">
+                            <span
+                              className={
+                                isWarmup
+                                  ? 'text-amber-300 font-bold uppercase tracking-wider'
+                                  : 'text-zinc-500 font-semibold'
+                              }
+                            >
+                              {isWarmup ? 'Warm-Up Set (excluded from PRs)' : `Set ${workingSetNum}`}
+                            </span>
+                            {prevWorkingSet && (
+                              <span className="font-mono text-zinc-400">
+                                Prev:{' '}
+                                <span className="text-zinc-200 font-semibold">
+                                  {prevWorkingSet.weightLbs > 0
+                                    ? `${prevWorkingSet.weightLbs}lb`
+                                    : 'BW'}{' '}
+                                  × {prevWorkingSet.reps}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-12 gap-1.5 items-center">
+                          {/* Set # / Warm-up Toggle Badge */}
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleWarmup(exIdx, setIdx)}
+                              title="Tap to toggle Warm-Up (W) vs Working Set"
+                              className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-extrabold cursor-pointer transition ${
+                                isWarmup
+                                  ? set.completed
+                                    ? 'bg-amber-500 text-zinc-950'
+                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                  : set.completed
+                                  ? 'bg-emerald-500 text-zinc-950'
+                                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
+                              }`}
+                            >
+                              {isWarmup ? 'W' : workingSetNum}
+                            </button>
+                          </div>
+
+                          {/* Weight Stepper (-5 / tap picker / +5) */}
+                          <div className="col-span-5 flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustWeight(exIdx, setIdx, -5)}
+                              className="w-8 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 font-bold text-xs flex items-center justify-center select-none cursor-pointer"
+                              aria-label="Decrease weight by 5 lbs"
+                            >
+                              -5
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setWeightPickerTarget({ exIdx, setIdx })}
+                              className={`flex-1 h-9 px-1 rounded-lg bg-zinc-900 border text-center font-mono font-extrabold text-sm flex flex-col items-center justify-center leading-none cursor-pointer transition ${
+                                set.weightLbs === null
+                                  ? 'border-amber-500/45 hover:border-amber-400 text-amber-300'
+                                  : 'border-zinc-700/80 hover:border-emerald-500/50 text-zinc-100'
+                              }`}
+                              title="Tap to pick dumbbell weight (0–55 lbs)"
+                            >
+                              <span>
+                                {set.weightLbs === null
+                                  ? '—'
+                                  : set.weightLbs === 0
+                                  ? 'BW'
+                                  : set.weightLbs}
+                              </span>
+                              <span
+                                className={`text-[9px] font-sans ${
+                                  set.weightLbs === null ? 'text-amber-400/90' : 'text-zinc-500'
+                                }`}
+                              >
+                                {set.weightLbs === null
+                                  ? 'pick'
+                                  : set.weightLbs === 0
+                                  ? 'body'
+                                  : 'lbs'}
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustWeight(exIdx, setIdx, 5)}
+                              className="w-8 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 font-bold text-xs flex items-center justify-center select-none cursor-pointer"
+                              aria-label="Increase weight by 5 lbs"
+                            >
+                              +5
+                            </button>
+                          </div>
+
+                          {/* Reps Stepper (-1 / input / +1) */}
+                          <div className="col-span-4 flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustReps(exIdx, setIdx, -1)}
+                              className="w-7 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 flex items-center justify-center select-none cursor-pointer"
+                              aria-label="Decrease reps"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              max={99}
+                              value={set.reps}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                updateSet(exIdx, setIdx, { reps: Number.isNaN(val) ? 0 : val });
+                              }}
+                              className={`w-11 h-9 rounded-lg bg-zinc-900 border text-center font-mono font-extrabold text-sm focus:outline-none ${
+                                set.completed && hitTopRange
+                                  ? 'border-emerald-500/60 text-emerald-300'
+                                  : 'border-zinc-700/80 text-zinc-100'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustReps(exIdx, setIdx, 1)}
+                              className="w-7 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 flex items-center justify-center select-none cursor-pointer"
+                              aria-label="Increase reps"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Complete Checkmark Button */}
+                          <div className="col-span-2 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSetComplete(exIdx, setIdx)}
+                              className={`w-11 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
+                                set.completed
+                                  ? isWarmup
+                                    ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20'
+                                    : 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/25'
+                                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
+                              }`}
+                              aria-label={`Mark set ${setIdx + 1} complete`}
+                            >
+                              <Check className="w-5 h-5 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+
+                {/* Add Set, + Warm-Up, Remove & Effort Strip */}
+                <div className="pt-1 space-y-2 px-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddSet(exIdx)}
+                        className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-zinc-800/60 transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Set
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAddWarmupSet(exIdx)}
+                        className="text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 py-1 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Warm-Up
+                      </button>
+                    </div>
+                    {ex.sets.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLastSet(exIdx)}
+                        className="text-xs font-medium text-zinc-500 hover:text-zinc-300 py-1 px-2 rounded-lg hover:bg-zinc-800/60 transition cursor-pointer"
+                      >
+                        Remove Last
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 1-Tap Effort / RIR Tag Strip */}
+                  <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-zinc-800/70">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                      Effort
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {(
+                        [
+                          { id: 'easy', label: 'Easy', activeCls: 'bg-sky-500/20 text-sky-300 border-sky-500/50' },
+                          { id: 'solid', label: 'Solid', activeCls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' },
+                          { id: 'hard', label: 'Hard', activeCls: 'bg-amber-500/20 text-amber-300 border-amber-500/50' },
+                          { id: 'max', label: 'Max', activeCls: 'bg-red-500/20 text-red-300 border-red-500/50' }
+                        ] as const
+                      ).map((opt) => {
+                        const isSelected = ex.effort === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => handleSetEffort(exIdx, opt.id)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
+                              isSelected
+                                ? opt.activeCls
+                                : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                             }`}
                           >
-                            {set.weightLbs === null
-                              ? 'pick'
-                              : set.weightLbs === 0
-                              ? 'body'
-                              : 'lbs'}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustWeight(exIdx, setIdx, 5)}
-                          className="w-8 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 font-bold text-xs flex items-center justify-center select-none cursor-pointer"
-                          aria-label="Increase weight by 5 lbs"
-                        >
-                          +5
-                        </button>
-                      </div>
-
-                      {/* Reps Stepper (-1 / input / +1) */}
-                      <div className="col-span-4 flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustReps(exIdx, setIdx, -1)}
-                          className="w-7 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 flex items-center justify-center select-none cursor-pointer"
-                          aria-label="Decrease reps"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          max={99}
-                          value={set.reps}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            updateSet(exIdx, setIdx, { reps: Number.isNaN(val) ? 0 : val });
-                          }}
-                          className={`w-11 h-9 rounded-lg bg-zinc-900 border text-center font-mono font-extrabold text-sm focus:outline-none ${
-                            set.completed && hitTopRange
-                              ? 'border-emerald-500/60 text-emerald-300'
-                              : 'border-zinc-700/80 text-zinc-100'
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustReps(exIdx, setIdx, 1)}
-                          className="w-7 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 flex items-center justify-center select-none cursor-pointer"
-                          aria-label="Increase reps"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Complete Checkmark Button */}
-                      <div className="col-span-2 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleSetComplete(exIdx, setIdx)}
-                          className={`w-11 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
-                            set.completed
-                              ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/25'
-                              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
-                          }`}
-                          aria-label={`Mark set ${setIdx + 1} complete`}
-                        >
-                          <Check className="w-5 h-5 stroke-[2.5]" />
-                        </button>
-                      </div>
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-
-                {/* Add / Remove Set Footer */}
-                <div className="pt-1 flex items-center justify-between px-1">
-                  <button
-                    type="button"
-                    onClick={() => handleAddSet(exIdx)}
-                    className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-zinc-800/60 transition cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Set
-                  </button>
-                  {ex.sets.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLastSet(exIdx)}
-                      className="text-xs font-medium text-zinc-500 hover:text-zinc-300 py-1 px-2 rounded-lg hover:bg-zinc-800/60 transition cursor-pointer"
-                    >
-                      Remove Last Set
-                    </button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

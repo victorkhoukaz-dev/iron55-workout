@@ -75,6 +75,8 @@ export interface LoggedSet {
   isPR?: boolean;
 }
 
+export type EffortRating = 'easy' | 'solid' | 'hard' | 'max';
+
 export interface LoggedExercise {
   exerciseId: string;
   exerciseName: string;
@@ -83,6 +85,7 @@ export interface LoggedExercise {
   repRangeMin: number;
   repRangeMax: number;
   sets: LoggedSet[];
+  effort?: EffortRating;
   notes?: string;
 }
 
@@ -126,6 +129,7 @@ export interface ProgressionRecommendation {
   reason: string;
   lastSessionDate?: string;
   lastSetsSummary?: string;
+  previousWorkingSets?: Array<{ weightLbs: number; reps: number }>;
 }
 
 export interface SupabaseConfig {
