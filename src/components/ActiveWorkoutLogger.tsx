@@ -72,6 +72,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
   const [weightPickerTarget, setWeightPickerTarget] = useState<{
     exIdx: number;
     setIdx: number;
+    completeAfterPick?: boolean;
   } | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState<boolean>(false);
   const [modalExerciseIdx, setModalExerciseIdx] = useState<number | null>(null);
@@ -128,36 +129,87 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     onUpdateDraft({ ...draft, exercises: nextExercises });
   };
 
+  const triggerSetCompletedEffects = (exIdx: number, setIdx: number) => {
+    const ex = draft.exercises[exIdx];
+    playSetCheckBeep();
+    const exDef = getExerciseDef(ex.exerciseId);
+    const planSlot = plan?.exercises.find((s) => s.exerciseId === ex.exerciseId);
+    const defaultRest = planSlot?.restSeconds || exDef?.defaultRestSeconds || 60;
+
+    // Determine smart superset hint
+    let hint = `${ex.exerciseName} — Set ${setIdx + 1} done`;
+    if (ex.supersetTag) {
+      const prefix = ex.supersetTag.charAt(0);
+      const num = ex.supersetTag.charAt(1);
+      const partnerTag = `${prefix}${num === '1' ? '2' : '1'}`;
+      const partner = draft.exercises.find((e) => e.supersetTag === partnerTag);
+      if (partner) {
+        hint = `Up next in Superset: ${partnerTag} ${partner.exerciseName}`;
+      }
+    }
+    startRestTimer(defaultRest, hint);
+  };
+
+  const applyWeightWithPropagation = (
+    exIdx: number,
+    setIdx: number,
+    weight: number,
+    completeTarget = false
+  ) => {
+    const nextExercises = draft.exercises.map((ex, i) => {
+      if (i !== exIdx) return ex;
+      const nextSets = ex.sets.map((s, j) => {
+        if (j === setIdx) {
+          return {
+            ...s,
+            weightLbs: weight,
+            completed: completeTarget ? true : s.completed
+          };
+        }
+        // Auto-fill remaining unset sets in this exercise once the user picks a weight
+        if (!s.completed && s.weightLbs === null) {
+          return { ...s, weightLbs: weight };
+        }
+        return s;
+      });
+      return { ...ex, sets: nextSets };
+    });
+
+    onUpdateDraft({ ...draft, exercises: nextExercises });
+
+    if (completeTarget) {
+      triggerSetCompletedEffects(exIdx, setIdx);
+    }
+  };
+
   const handleToggleSetComplete = (exIdx: number, setIdx: number) => {
     const ex = draft.exercises[exIdx];
     const currentSet = ex.sets[setIdx];
-    const nextCompleted = !currentSet.completed;
 
+    // Guard: prompt to pick a weight before completing an unset dumbbell set
+    if (!currentSet.completed && currentSet.weightLbs === null) {
+      setWeightPickerTarget({ exIdx, setIdx, completeAfterPick: true });
+      return;
+    }
+
+    const nextCompleted = !currentSet.completed;
     updateSet(exIdx, setIdx, { completed: nextCompleted });
 
     if (nextCompleted) {
-      playSetCheckBeep();
-      const exDef = getExerciseDef(ex.exerciseId);
-      const planSlot = plan?.exercises.find((s) => s.exerciseId === ex.exerciseId);
-      const defaultRest = planSlot?.restSeconds || exDef?.defaultRestSeconds || 60;
-
-      // Determine smart superset hint
-      let hint = `${ex.exerciseName} — Set ${setIdx + 1} done`;
-      if (ex.supersetTag) {
-        const prefix = ex.supersetTag.charAt(0);
-        const num = ex.supersetTag.charAt(1);
-        const partnerTag = `${prefix}${num === '1' ? '2' : '1'}`;
-        const partner = draft.exercises.find((e) => e.supersetTag === partnerTag);
-        if (partner) {
-          hint = `Up next in Superset: ${partnerTag} ${partner.exerciseName}`;
-        }
-      }
-      startRestTimer(defaultRest, hint);
+      triggerSetCompletedEffects(exIdx, setIdx);
     }
   };
 
   const handleAdjustWeight = (exIdx: number, setIdx: number, delta: number) => {
     const current = draft.exercises[exIdx].sets[setIdx].weightLbs;
+    if (current === null) {
+      if (delta > 0) {
+        applyWeightWithPropagation(exIdx, setIdx, 5);
+      } else {
+        setWeightPickerTarget({ exIdx, setIdx });
+      }
+      return;
+    }
     const next = Math.max(0, Math.min(55, snapToDumbbellIncrement(current + delta)));
     updateSet(exIdx, setIdx, { weightLbs: next });
   };
@@ -172,7 +224,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
     const ex = draft.exercises[exIdx];
     const lastSet = ex.sets[ex.sets.length - 1] || {
       setNumber: 0,
-      weightLbs: 20,
+      weightLbs: null,
       reps: ex.repRangeMin || 10,
       completed: false
     };
@@ -268,7 +320,10 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
       acc +
       ex.sets
         .filter((s) => s.completed)
-        .reduce((sAcc, s) => sAcc + (s.weightLbs > 0 ? s.weightLbs : 0) * s.reps, 0),
+        .reduce((sAcc, s) => {
+          const w = s.weightLbs ?? 0;
+          return sAcc + (w > 0 ? w : 0) * s.reps;
+        }, 0),
     0
   );
 
@@ -592,12 +647,30 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
                         <button
                           type="button"
                           onClick={() => setWeightPickerTarget({ exIdx, setIdx })}
-                          className="flex-1 h-9 px-1 rounded-lg bg-zinc-900 border border-zinc-700/80 hover:border-emerald-500/50 text-center font-mono font-extrabold text-sm text-zinc-100 flex flex-col items-center justify-center leading-none cursor-pointer"
+                          className={`flex-1 h-9 px-1 rounded-lg bg-zinc-900 border text-center font-mono font-extrabold text-sm flex flex-col items-center justify-center leading-none cursor-pointer transition ${
+                            set.weightLbs === null
+                              ? 'border-amber-500/45 hover:border-amber-400 text-amber-300'
+                              : 'border-zinc-700/80 hover:border-emerald-500/50 text-zinc-100'
+                          }`}
                           title="Tap to pick dumbbell weight (0–55 lbs)"
                         >
-                          <span>{set.weightLbs === 0 ? 'BW' : set.weightLbs}</span>
-                          <span className="text-[9px] text-zinc-500 font-sans">
-                            {set.weightLbs === 0 ? 'body' : 'lbs'}
+                          <span>
+                            {set.weightLbs === null
+                              ? '—'
+                              : set.weightLbs === 0
+                              ? 'BW'
+                              : set.weightLbs}
+                          </span>
+                          <span
+                            className={`text-[9px] font-sans ${
+                              set.weightLbs === null ? 'text-amber-400/90' : 'text-zinc-500'
+                            }`}
+                          >
+                            {set.weightLbs === null
+                              ? 'pick'
+                              : set.weightLbs === 0
+                              ? 'body'
+                              : 'lbs'}
                           </span>
                         </button>
                         <button
@@ -751,9 +824,12 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
                     key={w}
                     type="button"
                     onClick={() => {
-                      updateSet(weightPickerTarget.exIdx, weightPickerTarget.setIdx, {
-                        weightLbs: w
-                      });
+                      applyWeightWithPropagation(
+                        weightPickerTarget.exIdx,
+                        weightPickerTarget.setIdx,
+                        w,
+                        Boolean(weightPickerTarget.completeAfterPick)
+                      );
                       setWeightPickerTarget(null);
                     }}
                     className={`py-3 rounded-xl font-mono font-extrabold text-sm border transition cursor-pointer ${
@@ -813,8 +889,7 @@ export const ActiveWorkoutLogger: React.FC<ActiveWorkoutLoggerProps> = ({
                     </div>
                     <div className="text-sm font-bold text-zinc-100 mt-0.5">{def.name}</div>
                     <div className="text-[11px] text-zinc-400">
-                      Start: {def.startingWeightLbs > 0 ? `${def.startingWeightLbs} lbs` : 'BW'} •{' '}
-                      {def.repRangeMin}–{def.repRangeMax} reps
+                      {def.equipment} • {def.repRangeMin}–{def.repRangeMax} reps
                     </div>
                   </div>
                   <Plus className="w-4 h-4 text-emerald-400 shrink-0" />

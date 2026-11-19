@@ -12,7 +12,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 75,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 45,
     unilateral: true,
     setupCues: [
       'Set bench flat (0°). Place non-working hand and knee firmly on the bench.',
@@ -35,7 +34,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 75,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 35,
     unilateral: false,
     setupCues: [
       'Set bench to a 30°–45° incline and lie chest-down with feet planted wide for stability.',
@@ -58,7 +56,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 10,
     repRangeMax: 12,
-    startingWeightLbs: 40,
     unilateral: false,
     setupCues: [
       'Lie flat on the bench (or upper back across the bench) holding the inside plate of one dumbbell with both hands in a diamond grip.',
@@ -81,7 +78,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 10,
     repRangeMax: 15,
-    startingWeightLbs: 30,
     unilateral: false,
     setupCues: [
       'Set bench to 30° incline, lie chest-down, and use a pronated (palms facing back) grip.',
@@ -106,7 +102,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 90,
     repRangeMin: 6,
     repRangeMax: 10,
-    startingWeightLbs: 35,
     unilateral: false,
     setupCues: [
       'Set bench one notch forward of vertical (75°–80°) to protect shoulder joints and recruit upper chest/delts.',
@@ -129,7 +124,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 90,
     repRangeMin: 6,
     repRangeMax: 8,
-    startingWeightLbs: 40,
     unilateral: false,
     setupCues: [
       'Stand with feet shoulder-width apart, dumbbells resting on your front delts in a neutral or semi-pronated grip.',
@@ -152,7 +146,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 10,
     repRangeMax: 15,
-    startingWeightLbs: 15,
     unilateral: false,
     setupCues: [
       'Stand tall with a slight 10° forward hip hinge; hold dumbbells slightly in front of your thighs.',
@@ -175,7 +168,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 12,
     repRangeMax: 15,
-    startingWeightLbs: 15,
     unilateral: false,
     setupCues: [
       'Lie chest-down on a 30° incline bench so your torso is stabilized.',
@@ -198,7 +190,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 75,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 30,
     unilateral: false,
     setupCues: [
       'Sit upright against a 75°–85° bench holding dumbbells at chin height with palms facing you (like the top of a curl).'
@@ -222,7 +213,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 20,
     unilateral: false,
     setupCues: [
       'Set the bench to 45°–60°. Sit back with shoulder blades pinned and let arms hang perpendicular to the floor behind your torso.',
@@ -245,7 +235,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 25,
     unilateral: false,
     setupCues: [
       'Stand tall holding dumbbells with a neutral (palms facing each other) grip.',
@@ -268,7 +257,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 20,
     unilateral: false,
     setupCues: [
       'Set bench to 60°. Drape your chest or armpits over the top of the backrest so your upper arms rest against the pad or hang vertical.',
@@ -291,7 +279,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 20,
     unilateral: false,
     setupCues: [
       'Stand with dumbbells at your sides, palms facing forward (supinated).'
@@ -313,7 +300,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 10,
     repRangeMax: 15,
-    startingWeightLbs: 25,
     unilateral: true,
     setupCues: [
       'Sit on the flat bench, spread knees wide, and brace the back of your working upper arm against your inner thigh.'
@@ -337,7 +323,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 20,
     unilateral: false,
     setupCues: [
       'Lie on a flat bench holding dumbbells with a neutral (hammer) grip.',
@@ -360,7 +345,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 40,
     unilateral: false,
     setupCues: [
       'Sit against a 75°–85° bench holding one heavy dumbbell vertically overhead with both hands cupped under the top plate.',
@@ -383,7 +367,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 75,
     repRangeMin: 8,
     repRangeMax: 12,
-    startingWeightLbs: 40,
     unilateral: false,
     setupCues: [
       'Lie on the flat bench pressing two dumbbells together with palms facing each other (neutral grip).',
@@ -431,7 +414,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 90,
     repRangeMin: 6,
     repRangeMax: 10,
-    startingWeightLbs: 45,
     unilateral: false,
     setupCues: [
       'Set the bench to a low 30° incline (1–2 notches up from flat) to hit upper chest and front delts simultaneously.',
@@ -454,7 +436,6 @@ export const DEFAULT_EXERCISES: ExerciseDefinition[] = [
     defaultRestSeconds: 60,
     repRangeMin: 10,
     repRangeMax: 15,
-    startingWeightLbs: 50,
     unilateral: false,
     setupCues: [
       'Stand tall with heavy dumbbells held slightly in front of/beside your thighs and lean forward 5°.'

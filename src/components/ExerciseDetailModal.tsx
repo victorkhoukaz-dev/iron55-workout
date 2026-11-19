@@ -196,16 +196,21 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
               </div>
               <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800/80">
                 <div className="text-[10px] font-bold uppercase text-zinc-500">
-                  {progression ? 'Next Load' : 'Start Load'}
+                  {progression ? 'Next Load' : 'Load'}
                 </div>
                 <div className="text-xs font-mono font-extrabold text-emerald-400 mt-0.5">
                   {progression
-                    ? progression.recommendedWeightLbs > 0
+                    ? progression.recommendedWeightLbs === null
+                      ? 'Pick weight'
+                      : progression.recommendedWeightLbs > 0
                       ? `${progression.recommendedWeightLbs} lbs`
                       : 'BW'
-                    : exercise.startingWeightLbs > 0
+                    : exercise.equipment === 'Bodyweight' ||
+                      exercise.equipment === 'Bodyweight + DB'
+                    ? 'BW'
+                    : exercise.startingWeightLbs != null && exercise.startingWeightLbs > 0
                     ? `${exercise.startingWeightLbs} lbs`
-                    : 'BW'}
+                    : 'Pick weight'}
                 </div>
               </div>
             </div>

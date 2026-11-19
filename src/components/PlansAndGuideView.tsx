@@ -95,7 +95,7 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
   const [newExMuscle, setNewExMuscle] = useState<MuscleGroup>('Biceps');
   const [newExBench, setNewExBench] = useState<BenchAngle>('Flat Bench (0°)');
   const [newExEquip, setNewExEquip] = useState<EquipmentType>('Dumbbell (Pair)');
-  const [newExStartWeight, setNewExStartWeight] = useState<number>(20);
+  const [newExStartWeight, setNewExStartWeight] = useState<string>('');
   const [newExRepMin, setNewExRepMin] = useState<number>(8);
   const [newExRepMax, setNewExRepMax] = useState<number>(12);
   const [newExCue, setNewExCue] = useState('');
@@ -176,7 +176,7 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
       defaultRestSeconds: 60,
       repRangeMin: newExRepMin,
       repRangeMax: newExRepMax,
-      startingWeightLbs: newExStartWeight,
+      startingWeightLbs: newExStartWeight.trim() ? parseInt(newExStartWeight, 10) : null,
       unilateral: newExEquip === 'Dumbbell (Single)',
       setupCues: [newExCue.trim() || `Set bench to ${newExBench} and brace core.`],
       executionCues: ['Control the eccentric for 2 seconds and drive forcefully on the concentric.'],
@@ -846,8 +846,9 @@ export const PlansAndGuideView: React.FC<PlansAndGuideViewProps> = ({
                   min={0}
                   max={55}
                   value={newExStartWeight}
-                  onChange={(e) => setNewExStartWeight(parseInt(e.target.value, 10) || 0)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-100"
+                  onChange={(e) => setNewExStartWeight(e.target.value)}
+                  placeholder="Optional"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-100 placeholder:text-zinc-600"
                 />
               </div>
               <div>

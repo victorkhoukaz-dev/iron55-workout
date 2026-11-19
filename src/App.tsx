@@ -186,17 +186,28 @@ export const App: React.FC = () => {
       logs
     );
 
-    const completedSetsCount = exercisesWithPRs.reduce(
+    const normalizedExercises: LoggedExercise[] = exercisesWithPRs.map((ex) => ({
+      ...ex,
+      sets: ex.sets.map((s) => ({
+        ...s,
+        weightLbs: s.weightLbs ?? 0
+      }))
+    }));
+
+    const completedSetsCount = normalizedExercises.reduce(
       (sum, ex) => sum + ex.sets.filter((s) => s.completed && s.reps > 0).length,
       0
     );
 
-    const totalVolumeLbs = exercisesWithPRs.reduce(
+    const totalVolumeLbs = normalizedExercises.reduce(
       (sum, ex) =>
         sum +
         ex.sets
           .filter((s) => s.completed && s.reps > 0)
-          .reduce((sAcc, s) => sAcc + (s.weightLbs > 0 ? s.weightLbs : 0) * s.reps, 0),
+          .reduce((sAcc, s) => {
+            const w = s.weightLbs ?? 0;
+            return sAcc + (w > 0 ? w : 0) * s.reps;
+          }, 0),
       0
     );
 
@@ -213,7 +224,7 @@ export const App: React.FC = () => {
       totalSets: completedSetsCount,
       prsAchieved: totalPRsCount,
       notes: finalDraft.notes.trim() || undefined,
-      exercises: exercisesWithPRs,
+      exercises: normalizedExercises,
       updatedAt: nowIso
     };
 
@@ -531,14 +542,17 @@ export const App: React.FC = () => {
                                 ? 'text-emerald-400'
                                 : prog.action === 'MASTERY_AT_55'
                                 ? 'text-amber-400'
+                                : prog.recommendedWeightLbs === null
+                                ? 'text-amber-300'
                                 : 'text-sky-400'
                             }`}
                           >
                             <Sparkles className="w-3 h-3" />
-                            {prog.recommendedWeightLbs > 0
-                              ? `${prog.recommendedWeightLbs} lbs`
-                              : 'BW'}{' '}
-                            × {prog.recommendedReps}
+                            {prog.recommendedWeightLbs === null
+                              ? 'Pick weight'
+                              : prog.recommendedWeightLbs > 0
+                              ? `${prog.recommendedWeightLbs} lbs × ${prog.recommendedReps}`
+                              : `BW × ${prog.recommendedReps}`}
                           </div>
                           <div className="text-[10px] text-zinc-500">
                             {slot.targetSets} sets ({slot.repRangeMin}–{slot.repRangeMax})

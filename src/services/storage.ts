@@ -124,6 +124,7 @@ export function loadExercises(): ExerciseDefinition[] {
       if (!def) return savedEx;
       const needsSync =
         (def.imagePath && savedEx.imagePath !== def.imagePath) ||
+        savedEx.startingWeightLbs !== def.startingWeightLbs ||
         (!savedEx.whyItWorks && def.whyItWorks) ||
         (!savedEx.setupCues?.length && def.setupCues.length > 0) ||
         (!savedEx.executionCues?.length && def.executionCues.length > 0);
@@ -132,6 +133,7 @@ export function loadExercises(): ExerciseDefinition[] {
       return {
         ...savedEx,
         imagePath: def.imagePath || savedEx.imagePath,
+        startingWeightLbs: def.startingWeightLbs,
         whyItWorks: savedEx.whyItWorks || def.whyItWorks,
         setupCues: savedEx.setupCues?.length ? savedEx.setupCues : def.setupCues,
         executionCues: savedEx.executionCues?.length ? savedEx.executionCues : def.executionCues

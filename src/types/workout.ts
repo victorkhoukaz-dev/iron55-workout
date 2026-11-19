@@ -33,7 +33,7 @@ export interface ExerciseDefinition {
   defaultRestSeconds: number;
   repRangeMin: number;
   repRangeMax: number;
-  startingWeightLbs: number;
+  startingWeightLbs?: number | null;
   unilateral: boolean;
   setupCues: string[];
   executionCues: string[];
@@ -67,7 +67,7 @@ export interface WorkoutPlan {
 
 export interface LoggedSet {
   setNumber: number;
-  weightLbs: number;
+  weightLbs: number | null;
   reps: number;
   completed: boolean;
   isWarmup?: boolean;
@@ -120,7 +120,7 @@ export type ProgressionAction =
 
 export interface ProgressionRecommendation {
   action: ProgressionAction;
-  recommendedWeightLbs: number;
+  recommendedWeightLbs: number | null;
   recommendedReps: number;
   badgeText: string;
   reason: string;

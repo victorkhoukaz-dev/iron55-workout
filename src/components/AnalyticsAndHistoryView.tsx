@@ -354,23 +354,23 @@ export const AnalyticsAndHistoryView: React.FC<AnalyticsAndHistoryViewProps> = (
                             <span className="text-[10px] text-zinc-500">{ex.primaryMuscle}</span>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                            {doneSets.map((s, sIdx) => (
-                              <span
-                                key={sIdx}
-                                className={`px-2 py-0.5 rounded-lg font-mono text-[11px] border ${
-                                  s.isPR
-                                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold'
-                                    : 'bg-zinc-900 border-zinc-800 text-zinc-300'
-                                }`}
-                              >
-                                #{sIdx + 1}: {s.weightLbs > 0 ? `${s.weightLbs}lb` : 'BW'} ×{' '}
-                                {s.reps}
-                                {s.isPR ? ' ★PR' : ''}
-                                {s.weightLbs > 0
-                                  ? ` (1RM ${calculateEstimated1RM(s.weightLbs, s.reps)})`
-                                  : ''}
-                              </span>
-                            ))}
+                            {doneSets.map((s, sIdx) => {
+                              const w = s.weightLbs ?? 0;
+                              return (
+                                <span
+                                  key={sIdx}
+                                  className={`px-2 py-0.5 rounded-lg font-mono text-[11px] border ${
+                                    s.isPR
+                                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold'
+                                      : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                                  }`}
+                                >
+                                  #{sIdx + 1}: {w > 0 ? `${w}lb` : 'BW'} × {s.reps}
+                                  {s.isPR ? ' ★PR' : ''}
+                                  {w > 0 ? ` (1RM ${calculateEstimated1RM(w, s.reps)})` : ''}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
                       );

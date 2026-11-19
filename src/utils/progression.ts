@@ -61,7 +61,8 @@ export function getProgressionForExercise(
 ): ProgressionRecommendation {
   const repMin = slot.repRangeMin || exerciseDef?.repRangeMin || 8;
   const repMax = slot.repRangeMax || exerciseDef?.repRangeMax || 12;
-  const defaultStartWeight = exerciseDef?.startingWeightLbs ?? 20;
+  const isBodyweight =
+    exerciseDef?.equipment === 'Bodyweight' || exerciseDef?.equipment === 'Bodyweight + DB';
 
   // Find most recent completed log that has at least 1 completed set for this exercise
   const sortedLogs = [...logs].sort(
@@ -83,28 +84,56 @@ export function getProgressionForExercise(
   }
 
   if (!lastLoggedEx) {
+    if (isBodyweight) {
+      return {
+        action: 'FIRST_TIME',
+        recommendedWeightLbs: 0,
+        recommendedReps: repMin,
+        badgeText: `FIRST SESSION • BW × ${repMin}–${repMax}`,
+        reason: `Bodyweight baseline: aim for ${slot.targetSets} sets of ${repMin}–${repMax} controlled reps (or add a dumbbell when ready).`
+      };
+    }
+
+    const customStartWeight =
+      exerciseDef?.startingWeightLbs != null && exerciseDef.startingWeightLbs > 0
+        ? exerciseDef.startingWeightLbs
+        : null;
+
+    if (customStartWeight !== null) {
+      return {
+        action: 'FIRST_TIME',
+        recommendedWeightLbs: customStartWeight,
+        recommendedReps: repMin,
+        badgeText: `START: ${customStartWeight} lbs × ${repMin}–${repMax}`,
+        reason: `Baseline target: aim for ${slot.targetSets} sets of ${repMin}–${repMax} controlled reps.`
+      };
+    }
+
     return {
       action: 'FIRST_TIME',
-      recommendedWeightLbs: defaultStartWeight,
+      recommendedWeightLbs: null,
       recommendedReps: repMin,
-      badgeText: `START: ${defaultStartWeight > 0 ? `${defaultStartWeight} lbs` : 'BW'} × ${repMin}–${repMax}`,
-      reason: `Baseline target: aim for ${slot.targetSets} sets of ${repMin}–${repMax} controlled reps.`
+      badgeText: 'FIRST SESSION • PICK YOUR WEIGHT',
+      reason: `No preset weight — pick a dumbbell weight where ${repMin}–${repMax} clean reps feel challenging. Once logged, the app remembers it for next time.`
     };
   }
 
   const completedSets = lastLoggedEx.sets.filter((s) => s.completed && s.reps > 0);
   const lastSummary = completedSets
-    .map((s) => `${s.weightLbs > 0 ? `${s.weightLbs}lb` : 'BW'}×${s.reps}`)
+    .map((s) => {
+      const w = s.weightLbs ?? 0;
+      return `${w > 0 ? `${w}lb` : 'BW'}×${s.reps}`;
+    })
     .join(', ');
 
   // Primary working weight from last session (use highest weight among completed sets)
-  const workingWeight = Math.max(...completedSets.map((s) => s.weightLbs));
+  const workingWeight = Math.max(...completedSets.map((s) => s.weightLbs ?? 0));
   const avgReps = Math.round(
     completedSets.reduce((sum, s) => sum + s.reps, 0) / completedSets.length
   );
   const allSetsHitTopOfRange =
     completedSets.length >= slot.targetSets &&
-    completedSets.every((s) => s.reps >= repMax && s.weightLbs >= workingWeight);
+    completedSets.every((s) => s.reps >= repMax && (s.weightLbs ?? 0) >= workingWeight);
 
   if (allSetsHitTopOfRange) {
     if (workingWeight >= 55) {
@@ -191,13 +220,14 @@ export function getExerciseHistory(
     let volume = 0;
 
     for (const s of validSets) {
-      const e1rm = calculateEstimated1RM(s.weightLbs, s.reps);
+      const w = s.weightLbs ?? 0;
+      const e1rm = calculateEstimated1RM(w, s.reps);
       if (e1rm >= best1RM) {
         best1RM = e1rm;
-        bestWeight = s.weightLbs;
+        bestWeight = w;
         bestReps = s.reps;
       }
-      volume += (s.weightLbs > 0 ? s.weightLbs : 1) * s.reps;
+      volume += (w > 0 ? w : 1) * s.reps;
     }
 
     const dt = new Date(log.completedAt);
@@ -210,7 +240,10 @@ export function getExerciseHistory(
       estimated1RM: best1RM,
       totalVolumeLbs: volume,
       setsSummary: validSets
-        .map((s) => `${s.weightLbs > 0 ? `${s.weightLbs}lb` : 'BW'}×${s.reps}`)
+        .map((s) => {
+          const w = s.weightLbs ?? 0;
+          return `${w > 0 ? `${w}lb` : 'BW'}×${s.reps}`;
+        })
         .join(', ')
     });
   }
@@ -233,7 +266,7 @@ export function evaluateAndMarkPRs(
       if (!s.completed || s.reps <= 0) {
         return { ...s, isPR: false };
       }
-      const current1RM = calculateEstimated1RM(s.weightLbs, s.reps);
+      const current1RM = calculateEstimated1RM(s.weightLbs ?? 0, s.reps);
       if (history.length > 0 && current1RM > historicalBest1RM) {
         historicalBest1RM = current1RM;
         totalPRsCount += 1;
